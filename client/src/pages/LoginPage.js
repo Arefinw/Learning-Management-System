@@ -1,12 +1,29 @@
-import React, { useState } from 'react';
+/**
+ * @fileoverview This file defines the Login Page component.
+ * @description It provides a user interface for logging into the application using Material-UI components.
+ */
+
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { login } from '../features/auth/authSlice';
+import { login, reset } from '../features/auth/authSlice';
 import { useNavigate } from 'react-router-dom';
+import {
+  Container,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  CircularProgress,
+  Card,
+  CardContent,
+  Alert,
+} from '@mui/material';
 
 /**
  * @description Login page component. Allows users to log in with their email and password.
  * Dispatches the login action and redirects to the home page on successful login.
- * @returns {JSX.Element} - The login form.
+ * Displays loading indicators and error messages.
+ * @returns {JSX.Element} - The login form styled with Material-UI.
  */
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -20,6 +37,16 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   const { user, isLoading, error } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+    // Clear error state when component mounts or unmounts
+    return () => {
+      dispatch(reset());
+    };
+  }, [user, navigate, dispatch]);
 
   const onChange = (e) => {
     setFormData((prevState) => ({
@@ -39,39 +66,61 @@ const LoginPage = () => {
     dispatch(login(userData));
   };
 
-  // Redirect if logged in
-  useEffect(() => {
-    if (user) {
-      navigate('/');
-    }
-  }, [user, navigate]);
-
-  if (isLoading) {
-    return <h2>Loading...</h2>; // Replace with a proper spinner
-  }
-
   return (
-    <div>
-      <h1>Login</h1>
-      <form onSubmit={onSubmit}>
-        <input
-          type="email"
-          name="email"
-          value={email}
-          placeholder="Enter your email"
-          onChange={onChange}
-        />
-        <input
-          type="password"
-          name="password"
-          value={password}
-          placeholder="Enter password"
-          onChange={onChange}
-        />
-        <button type="submit">Login</button>
-      </form>
-      {error && <p>{error}</p>}
-    </div>
+    <Container component="main" maxWidth="xs">
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Card sx={{ minWidth: 275, padding: 4, borderRadius: 2 }}>
+          <CardContent>
+            <Typography component="h1" variant="h5" align="center" gutterBottom>
+              Sign In
+            </Typography>
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            <Box component="form" onSubmit={onSubmit} noValidate sx={{ mt: 1 }}>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="email"
+                label="Email Address"
+                name="email"
+                autoComplete="email"
+                autoFocus
+                value={email}
+                onChange={onChange}
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type="password"
+                id="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={onChange}
+              />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+                disabled={isLoading}
+              >
+                {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+    </Container>
   );
 };
 

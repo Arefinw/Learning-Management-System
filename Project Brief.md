@@ -1,4 +1,4 @@
-# PROJECT BRIEF: Personal & Collaborative Learning Management System v2.1
+# PROJECT BRIEF: Personal & Collaborative Learning Management System
 
 ## 1. Project Vision & Guiding Principles
 To create a flexible, collaborative LMS where users can build, share, and follow structured learning "Pathways."
