@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 export const AuthContext = createContext();
 
@@ -11,12 +11,12 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      axios
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      api
         .get('/api/auth/me')
         .then((res) => {
           setIsAuthenticated(true);
-          setUser(res.data);
+          setUser(res.data.data);
           setLoading(false);
         })
         .catch((err) => {
@@ -40,12 +40,12 @@ export const AuthProvider = ({ children }) => {
     const body = JSON.stringify({ email, password });
 
     try {
-      const res = await axios.post('/api/auth/login', body, config);
+      const res = await api.post('/api/auth/login', body, config);
       localStorage.setItem('token', res.data.token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
-      const userRes = await axios.get('/api/auth/me');
+      api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+      const userRes = await api.get('/api/auth/me');
       setIsAuthenticated(true);
-      setUser(userRes.data);
+      setUser(userRes.data.data);
     } catch (err) {
       console.error(err.response.data);
     }
@@ -61,12 +61,12 @@ export const AuthProvider = ({ children }) => {
     const body = JSON.stringify({ name, email, password });
 
     try {
-      const res = await axios.post('/api/auth/register', body, config);
+      const res = await api.post('/api/auth/register', body, config);
       localStorage.setItem('token', res.data.token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
-      const userRes = await axios.get('/api/auth/me');
+      api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+      const userRes = await api.get('/api/auth/me');
       setIsAuthenticated(true);
-      setUser(userRes.data);
+      setUser(userRes.data.data);
     } catch (err) {
       console.error(err.response.data);
     }
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
+    delete api.defaults.headers.common['Authorization'];
     setIsAuthenticated(false);
     setUser(null);
   };

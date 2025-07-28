@@ -1,15 +1,16 @@
 const Workspace = require('../models/Workspace');
+const User = require('../models/User'); // Import User model
 
 // @desc    Get all workspaces
 // @route   GET /api/workspaces
 // @access  Private
 exports.getWorkspaces = async (req, res) => {
   try {
-    const workspaces = await Workspace.find({ owner: req.user.id });
-    res.json(workspaces);
+    const workspaces = await Workspace.find({ owner: req.user.id }).populate('owner', 'name email').populate('members.user', 'name email');
+    res.json({ success: true, data: workspaces });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
@@ -17,20 +18,21 @@ exports.getWorkspaces = async (req, res) => {
 // @route   POST /api/workspaces
 // @access  Private
 exports.createWorkspace = async (req, res) => {
-  const { name, description } = req.body;
+  const { name, description, visibility } = req.body;
 
   try {
     const newWorkspace = new Workspace({
       name,
       description,
       owner: req.user.id,
+      visibility,
     });
 
     const workspace = await newWorkspace.save();
-    res.json(workspace);
+    res.status(201).json({ success: true, data: workspace });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
@@ -39,21 +41,28 @@ exports.createWorkspace = async (req, res) => {
 // @access  Private
 exports.getWorkspace = async (req, res) => {
   try {
-    const workspace = await Workspace.findById(req.params.id);
+    const workspace = await Workspace.findById(req.params.id)
+      .populate('owner', 'name email')
+      .populate('members.user', 'name email')
+      .populate('projects'); // Populate projects to display in workspace detail
 
     if (!workspace) {
-      return res.status(404).json({ msg: 'Workspace not found' });
+      return res.status(404).json({ success: false, error: 'Workspace not found' });
     }
 
-    // Check for user
-    if (workspace.owner.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'User not authorized' });
+    // Check for user authorization based on visibility
+    if (workspace.visibility === 'private' && workspace.owner.toString() !== req.user.id) {
+      return res.status(401).json({ success: false, error: 'User not authorized' });
+    }
+    if (workspace.visibility === 'workspace' && !workspace.members.some(member => member.user._id.toString() === req.user.id)) {
+      return res.status(401).json({ success: false, error: 'User not authorized to view this workspace' });
     }
 
-    res.json(workspace);
+
+    res.json({ success: true, data: workspace });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
@@ -61,23 +70,24 @@ exports.getWorkspace = async (req, res) => {
 // @route   PUT /api/workspaces/:id
 // @access  Private
 exports.updateWorkspace = async (req, res) => {
-  const { name, description } = req.body;
+  const { name, description, visibility } = req.body;
 
   // Build workspace object
   const workspaceFields = {};
   if (name) workspaceFields.name = name;
   if (description) workspaceFields.description = description;
+  if (visibility) workspaceFields.visibility = visibility;
 
   try {
     let workspace = await Workspace.findById(req.params.id);
 
     if (!workspace) {
-      return res.status(404).json({ msg: 'Workspace not found' });
+      return res.status(404).json({ success: false, error: 'Workspace not found' });
     }
 
     // Make sure user owns the workspace
     if (workspace.owner.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'Not authorized' });
+      return res.status(401).json({ success: false, error: 'Not authorized' });
     }
 
     workspace = await Workspace.findByIdAndUpdate(
@@ -86,10 +96,10 @@ exports.updateWorkspace = async (req, res) => {
       { new: true }
     );
 
-    res.json(workspace);
+    res.json({ success: true, data: workspace });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
@@ -101,20 +111,20 @@ exports.deleteWorkspace = async (req, res) => {
     const workspace = await Workspace.findById(req.params.id);
 
     if (!workspace) {
-      return res.status(404).json({ msg: 'Workspace not found' });
+      return res.status(404).json({ success: false, error: 'Workspace not found' });
     }
 
     // Check for user
     if (workspace.owner.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'User not authorized' });
+      return res.status(401).json({ success: false, error: 'User not authorized' });
     }
 
     await workspace.remove();
 
-    res.json({ msg: 'Workspace removed' });
+    res.json({ success: true, message: 'Workspace removed' });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
@@ -126,24 +136,29 @@ exports.addMember = async (req, res) => {
     const workspace = await Workspace.findById(req.params.id);
 
     if (!workspace) {
-      return res.status(404).json({ msg: 'Workspace not found' });
+      return res.status(404).json({ success: false, error: 'Workspace not found' });
     }
 
     // Check for user
     if (workspace.owner.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'User not authorized' });
+      return res.status(401).json({ success: false, error: 'User not authorized' });
     }
 
-    const { email, role } = req.body;
+    const { email, role = 'member' } = req.body; // Default role to 'member'
 
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(404).json({ msg: 'User not found' });
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    // Check if user is already a member
+    if (workspace.members.some(member => member.user.toString() === user._id.toString())) {
+      return res.status(400).json({ success: false, error: 'User is already a member of this workspace' });
     }
 
     const newMember = {
-      user: user.id,
+      user: user._id,
       role,
     };
 
@@ -151,9 +166,15 @@ exports.addMember = async (req, res) => {
 
     await workspace.save();
 
-    res.json(workspace.members);
+    // Populate the user field for the newly added member in the response
+    const updatedWorkspace = await Workspace.findById(req.params.id)
+      .populate('owner', 'name email')
+      .populate('members.user', 'name email')
+      .populate('projects');
+
+    res.json({ success: true, data: updatedWorkspace });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };

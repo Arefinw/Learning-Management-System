@@ -52,6 +52,10 @@ const pathwaySchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  completed: {
+    type: Boolean,
+    default: false,
+  },
   updatedAt: {
     type: Date,
     default: Date.now,

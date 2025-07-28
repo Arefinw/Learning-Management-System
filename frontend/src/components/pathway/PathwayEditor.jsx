@@ -61,19 +61,19 @@ const PathwayEditor = () => {
   };
 
   if (!pathway) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   return (
-    <div>
-      <h2 className="text-xl font-bold">Editing: {pathway.title}</h2>
-      <p>{pathway.description}</p>
+    <div className="card">
+      <h2 className="text-2xl font-bold mb-4">Editing: {pathway.title}</h2>
+      <p className="mb-4">{pathway.description}</p>
 
-      <div className="mt-4">
-        <h3 className="text-lg font-bold">Pathway Items</h3>
+      <div className="mb-6">
+        <h3 className="text-xl font-semibold mb-3">Pathway Items</h3>
         <ul>
           {pathway.items.map((item, index) => (
-            <li key={index} className="flex items-center mb-2">
+            <li key={index} className="flex items-center mb-2 py-1 border-b border-neutral-border last:border-b-0">
               <input
                 type="checkbox"
                 checked={item.completed}
@@ -81,66 +81,77 @@ const PathwayEditor = () => {
                 className="mr-2"
               />
               <span>{item.type}: {item.content}</span>
-              <button
-                onClick={() => handleRemoveItem(index)}
-                className="ml-4 bg-red-500 text-white px-2 py-1 rounded"
-              >
-                Remove
-              </button>
-              {index > 0 && (
+              <div className="ml-auto flex items-center space-x-2">
                 <button
-                  onClick={() => handleMoveItem(index, index - 1)}
-                  className="ml-2 bg-gray-300 px-2 py-1 rounded"
+                  onClick={() => handleRemoveItem(index)}
+                  className="btn btn-danger btn-sm"
                 >
-                  Up
+                  Remove
                 </button>
-              )}
-              {index < pathway.items.length - 1 && (
-                <button
-                  onClick={() => handleMoveItem(index, index + 1)}
-                  className="ml-2 bg-gray-300 px-2 py-1 rounded"
-                >
-                  Down
-                </button>
-              )}
+                {index > 0 && (
+                  <button
+                    onClick={() => handleMoveItem(index, index - 1)}
+                    className="btn btn-secondary btn-sm"
+                  >
+                    Up
+                  </button>
+                )}
+                {index < pathway.items.length - 1 && (
+                  <button
+                    onClick={() => handleMoveItem(index, index + 1)}
+                    className="btn btn-secondary btn-sm"
+                  >
+                    Down
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>
+      </div>
 
-        <div className="mt-4">
-          <h4 className="text-md font-bold">Add New Item</h4>
+      <div className="card">
+        <h4 className="text-xl font-semibold mb-3">Add New Item</h4>
+        <div className="form-group">
+          <label className="form-label" htmlFor="newItemType">Item Type</label>
           <select
+            id="newItemType"
             value={newItemType}
             onChange={(e) => setNewItemType(e.target.value)}
-            className="border p-2 mr-2"
+            className="form-control"
           >
             <option value="Link">Link</option>
             <option value="Video">Video</option>
             <option value="Document">Document</option>
           </select>
+        </div>
+        <div className="form-group">
+          <label className="form-label" htmlFor="newItemContent">Content</label>
           {newItemType === 'Document' ? (
             <textarea
+              id="newItemContent"
               value={newItemContent}
               onChange={(e) => setNewItemContent(e.target.value)}
               placeholder="Document Content (Markdown)"
-              className="border p-2 w-full h-32"
+              className="form-control h-32"
             ></textarea>
           ) : (
             <input
+              id="newItemContent"
               type="text"
               value={newItemContent}
               onChange={(e) => setNewItemContent(e.target.value)}
               placeholder="Content URL or ID"
-              className="border p-2 w-full"
+              className="form-control"
             />
           )}
-          <button
-            onClick={handleAddItem}
-            className="mt-2 bg-green-500 text-white px-4 py-2 rounded"
-          >
-            Add Item
-          </button>
         </div>
+        <button
+          onClick={handleAddItem}
+          className="btn btn-primary mt-4"
+        >
+          Add Item
+        </button>
       </div>
     </div>
   );

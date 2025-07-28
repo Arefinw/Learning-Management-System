@@ -22,18 +22,22 @@ const PathwayDetail = () => {
   }, [user, id]);
 
   if (!pathway) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   return (
-    <div>
-      <h2 className="text-xl font-bold">{pathway.title}</h2>
-      <p>{pathway.description}</p>
+    <div className="card">
+      <h2 className="text-2xl font-bold mb-4">{pathway.title}</h2>
+      <p className="mb-4">{pathway.description}</p>
+      <h3 className="text-xl font-semibold mb-3">Items</h3>
       <ul>
         {pathway.items.map((item) => (
-          <li key={item._id}>{item.type}</li>
+          <li key={item._id} className="py-1 border-b border-neutral-border last:border-b-0">
+            {item.type}: {item.content}
+          </li>
         ))}
       </ul>
+      <Link to={`/pathways/${pathway._id}/edit`} className="btn btn-secondary mt-4">Edit Pathway</Link>
     </div>
   );
 };

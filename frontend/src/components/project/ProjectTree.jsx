@@ -127,7 +127,7 @@ const ProjectTree = ({ projectId }) => {
   }, [user, projectId]);
 
   if (!project) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   const filteredFolders = project.folders.filter((folder) =>
@@ -136,11 +136,11 @@ const ProjectTree = ({ projectId }) => {
 
   return (
     <div>
-      <h3 className="text-lg font-bold">{project.name}</h3>
+      <h3 className="text-xl font-semibold mb-3">Project Content</h3>
       <input
         type="text"
         placeholder="Search folders/pathways..."
-        className="border p-2 mb-4 w-full"
+        className="form-control mb-4"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />

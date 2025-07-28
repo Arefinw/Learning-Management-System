@@ -21,12 +21,18 @@ const PathwayList = ({ projectId }) => {
 
   return (
     <div>
-      <h3 className="text-lg font-bold">Pathways</h3>
-      <ul>
-        {pathways.map((pathway) => (
-          <li key={pathway._id}>{pathway.title}</li>
-        ))}
-      </ul>
+      <h3 className="text-xl font-semibold mb-3">Pathways</h3>
+      <div className="card">
+        <ul>
+          {pathways.map((pathway) => (
+            <li key={pathway._id} className="py-2 border-b border-neutral-border last:border-b-0">
+              <Link to={`/pathways/${pathway._id}`} className="text-primary hover:underline">
+                {pathway.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };

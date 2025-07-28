@@ -22,6 +22,7 @@ app.use('/api/workspaces', require('./routes/workspace.routes'));
 app.use('/api/projects', require('./routes/project.routes'));
 app.use('/api/pathways', require('./routes/pathway.routes'));
 app.use('/api/search', require('./routes/search.routes'));
+app.use('/api/dashboard', require('./routes/dashboard.routes'));
 
 const errorHandler = require('./middleware/error.middleware');
 

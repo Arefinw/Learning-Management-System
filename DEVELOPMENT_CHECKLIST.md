@@ -1,221 +1,234 @@
 # Development Checklist
 
-## 1. Missing Features
+## 1. CRITICAL ISSUES
 
-### High Priority
-- [ ] **User Profile Management (Frontend)**: Users can view and edit their own profile information (name, email).
-  - Description: Implement a dedicated page or section for users to manage their profile.
-  - Affected Files: `frontend/src/pages/Dashboard.jsx`, `frontend/src/components/layout/Sidebar.jsx`, `frontend/src/services/user.js`, `frontend/src/App.jsx` (for routing).
-  - Estimated Complexity: Medium
+- [ ] **Database Connection Problem (Backend)**
+  - Description: The application crashes with "bad auth : authentication failed" if `MONGO_URI` in `.env` is not correctly configured for MongoDB Atlas.
+  - Affected Files: `backend/config/db.js` (L5-L12), `backend/server.js` (L10)
+  - Reproduction Steps: 
+    1. Ensure `backend/.env` has an incorrect or placeholder `MONGO_URI` (e.g., `MONGO_URI=MONGO_URI`).
+    2. Run `npm run dev` in `backend/`.
+    3. Observe the crash and error message in the console.
 
-- [ ] **Workspace Creation/Management (Frontend)**: Users can create, view, update, and delete their workspaces.
-  - Description: Implement UI for full CRUD operations on workspaces.
-  - Affected Files: `frontend/src/components/workspace/WorkspaceList.jsx`, `frontend/src/components/workspace/WorkspaceDetail.jsx`, `frontend/src/services/workspace.js`, `frontend/src/App.jsx` (for routing).
-  - Estimated Complexity: High
+- [ ] **Missing `index.html` (Frontend)**
+  - Description: The frontend serves a blank page and shows a 404 error for `index.html` if the file is missing.
+  - Affected Files: `frontend/index.html` (entire file missing)
+  - Reproduction Steps:
+    1. Delete `frontend/index.html`.
+    2. Run `npm run dev` in `frontend/`.
+    3. Open the browser to `http://localhost:5173`.
+    4. Observe the blank page and 404 error in the browser console for `index.html`.
 
-- [ ] **Project Creation/Management (Frontend)**: Users can create, view, update, and delete projects within a workspace.
-  - Description: Implement UI for full CRUD operations on projects.
-  - Affected Files: `frontend/src/components/project/ProjectDetail.jsx`, `frontend/src/components/project/ProjectTree.jsx`, `frontend/src/services/project.js`, `frontend/src/App.jsx` (for routing).
-  - Estimated Complexity: High
+- [ ] **Frontend Routing Mismatch**
+  - Description: Navigating to `/workspaces` or `/projects` results in "No routes matched location" errors because the routes are not defined in `App.jsx`.
+  - Affected Files: `frontend/src/App.jsx` (L20-L25 in previous state)
+  - Reproduction Steps:
+    1. Log in to the frontend.
+    2. Click on "Workspaces" or "Projects" in the sidebar.
+    3. Observe the console errors: `No routes matched location "/workspaces"` or `No routes matched location "/projects"`.
 
-- [ ] **Folder Creation/Management (Frontend)**: Users can create, view, update, and delete folders within a project.
-  - Description: Implement UI for full CRUD operations on folders.
-  - Affected Files: `frontend/src/components/project/FolderTree.jsx`, `frontend/src/services/folder.js` (new file), `frontend/src/App.jsx` (for routing).
-  - Estimated Complexity: High
+## 2. FUNCTIONALITY GAPS
 
-- [ ] **Pathway Creation/Management (Frontend)**: Users can create, view, update, and delete pathways within a project or folder.
-  - Description: Implement UI for full CRUD operations on pathways.
-  - Affected Files: `frontend/src/components/pathway/PathwayList.jsx`, `frontend/src/components/pathway/PathwayDetail.jsx`, `frontend/src/components/pathway/PathwayEditor.jsx`, `frontend/src/services/pathway.js`, `frontend/src/App.jsx` (for routing).
-  - Estimated Complexity: High
+### Backend
+- [ ] **Folder CRUD Operations**
+  - Description: There are no dedicated routes or controllers for creating, reading, updating, or deleting `Folder` models. Folders are only populated via `ProjectTree`.
+  - Affected Files: 
+    - Missing: `backend/routes/folder.routes.js`, `backend/controllers/folder.controller.js`
+    - Related: `backend/models/Folder.js`, `backend/models/Project.js`
+  - Reproduction Steps: Attempt to manage folders via API.
 
-- [ ] **Content Item Management (Link, Video, Document) (Frontend)**: Implement UI for creating, updating, and deleting Link, Video, and Document items within a pathway.
-  - Description: The `PathwayEditor` has basic add functionality, but needs full CRUD and proper input fields for each type.
-  - Affected Files: `frontend/src/components/pathway/PathwayEditor.jsx`, `backend/models/Link.js`, `backend/models/Video.js`, `backend/models/Document.js`, `backend/controllers/pathway.controller.js` (for item manipulation), `backend/routes/pathway.routes.js`.
-  - Estimated Complexity: High
+- [ ] **Link, Video, Document CRUD Operations**
+  - Description: While `Pathway` can contain `items` of these types, there are no direct CRUD operations for `Link`, `Video`, or `Document` models. They are only managed as part of a `Pathway`.
+  - Affected Files: 
+    - Missing: `backend/routes/link.routes.js`, `backend/routes/video.routes.js`, `backend/routes/document.routes.js`, `backend/controllers/link.controller.js`, `backend/controllers/video.controller.js`, `backend/controllers/document.controller.js`
+    - Related: `backend/models/Link.js`, `backend/models/Video.js`, `backend/models/Document.js`, `backend/models/Pathway.js`, `backend/controllers/pathway.controller.js` (L150-L175 `addItem`)
+  - Reproduction Steps: Attempt to manage these content types independently.
 
-### Medium Priority
-- [ ] **Role-Based Access Control (Frontend UI)**: Display different UI elements or restrict access based on user roles (user/admin).
-  - Description: Implement conditional rendering for admin-specific features and navigation.
-  - Affected Files: `frontend/src/components/layout/Header.jsx`, `frontend/src/components/layout/Sidebar.jsx`, `frontend/src/pages/AdminPanel.jsx`, `frontend/src/context/AuthContext.jsx`.
-  - Estimated Complexity: Medium
+- [ ] **User Profile Update (Self)**
+  - Description: The `updateUser` controller allows updating any user by ID, but there's no specific endpoint for a logged-in user to update *their own* profile without admin privileges.
+  - Affected Files: `backend/controllers/user.controller.js` (L50-L77 `updateUser`)
+  - Reproduction Steps: As a regular user, attempt to update your own profile information.
 
-- [ ] **Search Functionality (Frontend)**: Integrate the backend search API with a user-friendly search interface.
-  - Description: Display search results clearly and allow navigation to found items.
-  - Affected Files: `frontend/src/components/search/SearchBar.jsx`.
-  - Estimated Complexity: Medium
+### Frontend
+- [ ] **Full CRUD UI for Workspaces**
+  - Description: `WorkspaceList` only displays workspaces. There's no UI to create, update, or delete workspaces.
+  - Affected Files: `frontend/src/components/workspace/WorkspaceList.jsx`, `frontend/src/components/workspace/WorkspaceDetail.jsx`
+  - Reproduction Steps: Navigate to `/workspaces` and observe lack of management options.
 
-- [ ] **Public View for Content**: Implement a public-facing view for content marked as 'public'.
-  - Description: Create routes and components to display public workspaces, projects, folders, and pathways without requiring authentication.
-  - Affected Files: `frontend/src/pages/PublicView.jsx`, `backend/controllers/workspace.controller.js`, `backend/controllers/project.controller.js`, `backend/controllers/folder.controller.js` (new), `backend/controllers/pathway.controller.js`, `backend/routes/workspace.routes.js`, `backend/routes/project.routes.js`, `backend/routes/pathway.routes.js`.
-  - Estimated Complexity: High
+- [ ] **Full CRUD UI for Projects**
+  - Description: `ProjectList` only displays projects. There's no UI to create, update, or delete projects.
+  - Affected Files: `frontend/src/components/project/ProjectList.jsx`, `frontend/src/components/project/ProjectDetail.jsx`
+  - Reproduction Steps: Navigate to `/projects` and observe lack of management options.
 
-### Low Priority
-- [ ] **User Profile Management (Backend)**: API endpoint for users to update their own profile (name, email).
-  - Description: The `updateUser` controller currently allows updating any user by ID, but needs to be restricted to the authenticated user for self-updates.
-  - Affected Files: `backend/controllers/user.controller.js`, `backend/routes/user.routes.js`.
-  - Estimated Complexity: Low
+- [ ] **Full CRUD UI for Folders**
+  - Description: `FolderTree` displays folders, but there's no UI to create, update, or delete folders.
+  - Affected Files: `frontend/src/components/project/FolderTree.jsx`, `frontend/src/components/project/ProjectTree.jsx`
+  - Reproduction Steps: Navigate to a project and observe lack of folder management options.
 
-- [ ] **Pagination for Lists**: Implement pagination for large lists of data (e.g., users, workspaces, projects, pathways).
-  - Description: Improve performance and user experience for large datasets.
-  - Affected Files: All controller functions that return lists (`getUsers`, `getWorkspaces`, `getProjects`, `getPathways`), and their corresponding frontend components.
-  - Estimated Complexity: Medium
+- [ ] **Full CRUD UI for Pathways**
+  - Description: `PathwayList` displays pathways, and `PathwayEditor` allows adding items, but there's no UI to create, update, or delete pathways themselves.
+  - Affected Files: `frontend/src/components/pathway/PathwayList.jsx`, `frontend/src/components/pathway/PathwayDetail.jsx`, `frontend/src/components/pathway/PathwayEditor.jsx`
+  - Reproduction Steps: Navigate to a project or folder and observe lack of pathway management options.
 
-## 2. Bug Fixes Needed
+- [ ] **Full CRUD UI for Pathway Items (Link, Video, Document)**
+  - Description: `PathwayEditor` has basic add functionality, but lacks full CRUD for individual items (edit, delete, reorder persistence).
+  - Affected Files: `frontend/src/components/pathway/PathwayEditor.jsx` (L100-L104 `handleRemoveItem`, L106-L110 `handleToggleCompleted`, L112-L117 `handleMoveItem` - these are frontend-only updates)
+  - Reproduction Steps: Attempt to fully manage items within a pathway.
 
-- [ ] **Backend: `project.remove()` is deprecated**:
-  - Description: `Model.remove()` is deprecated. Use `deleteOne()` or `deleteMany()` instead.
-  - Affected Files: `backend/controllers/project.controller.js`
-  - Estimated Complexity: Low
+- [ ] **Error Handling and User Feedback**
+  - Description: While `AuthContext` and `api.js` have some error handling, user-facing error messages are often generic (`Server error`) or only logged to console. There's no consistent display of error messages to the user.
+  - Affected Files: `frontend/src/context/AuthContext.jsx` (L70, L98), `frontend/src/services/api.js` (L30), `frontend/src/components/common/Error.jsx` (used, but not consistently triggered).
+  - Reproduction Steps: Trigger an API error (e.g., invalid login) and observe user feedback.
 
-- [ ] **Backend: `pathway.remove()` is deprecated**:
-  - Description: `Model.remove()` is deprecated. Use `deleteOne()` or `deleteMany()` instead.
-  - Affected Files: `backend/controllers/pathway.controller.js`
-  - Estimated Complexity: Low
+- [ ] **Loading States and Spinners**
+  - Description: Some components have basic loading indicators (`Loading...` text or `Loading` component), but it's not consistently applied across all data-fetching components.
+  - Affected Files: `frontend/src/components/pathway/PathwayDetail.jsx` (L25), `frontend/src/components/pathway/PathwayEditor.jsx` (L59), `frontend/src/components/project/ProjectDetail.jsx` (L25), `frontend/src/components/project/ProjectTree.jsx` (L80), `frontend/src/components/workspace/WorkspaceDetail.jsx` (L59)
+  - Reproduction Steps: Navigate to pages that fetch data and observe loading behavior.
 
-- [ ] **Backend: `workspace.remove()` is deprecated**:
-  - Description: `Model.remove()` is deprecated. Use `deleteOne()` or `deleteMany()` instead.
-  - Affected Files: `backend/controllers/workspace.controller.js`
-  - Estimated Complexity: Low
+## 3. ARCHITECTURE REVIEW
 
-- [ ] **Frontend: `WorkspaceDetail` member display**: The `member.user._id` is used as key, but `member.user` is likely populated with the full user object, so `member.user.email` should be used for display.
-  - Description: Ensure correct display of member information in WorkspaceDetail.
-  - Affected Files: `frontend/src/components/workspace/WorkspaceDetail.jsx`
-  - Estimated Complexity: Low
+- [ ] **Backend: Deprecated Mongoose Methods**
+  - Description: Usage of `Model.remove()` is deprecated and should be replaced with `deleteOne()` or `deleteMany()`.
+  - Affected Files:
+    - `backend/controllers/project.controller.js` (L130 `await project.remove();`)
+    - `backend/controllers/pathway.controller.js` (L100 `await pathway.remove();`)
+    - `backend/controllers/workspace.controller.js` (L130 `await workspace.remove();`)
+  - Reproduction Steps: Check Mongoose documentation for deprecation warnings.
 
-- [ ] **Frontend: PathwayEditor item content display**: `item.content` is an ObjectId, not the actual content.
-  - Description: The `PathwayEditor` currently displays `item.content` directly, which is an ObjectId. It needs to fetch and display the actual Link, Video, or Document content.
-  - Affected Files: `frontend/src/components/pathway/PathwayEditor.jsx`, `backend/controllers/pathway.controller.js` (needs population of `items.content`).
-  - Estimated Complexity: Medium
+- [ ] **Backend: Inconsistent Error Handling**
+  - Description: While `error.middleware.js` exists, not all controllers consistently throw `ErrorResponse` instances. Some still use `res.status(500).send('Server error')` directly.
+  - Affected Files: All `backend/controllers/*.js` files (e.g., `auth.controller.js` L49, L97, L115; `pathway.controller.js` L20, L40, L60, L85, L105, L175; `project.controller.js` L20, L40, L75, L105, L135; `search.controller.js` L40; `user.controller.js` L20, L45, L75; `workspace.controller.js` L20, L40, L75, L105, L135, L175)
+  - Reproduction Steps: Trigger various error scenarios and observe the response format.
 
-- [ ] **Frontend: ProjectTree `FolderNode` search filtering**: The `matchesSearch` function is only checking `item.name`. It should also check `item.description` for folders and `item.title` and `item.description` for pathways.
-  - Description: Improve search accuracy in the project tree.
-  - Affected Files: `frontend/src/components/project/ProjectTree.jsx`
-  - Estimated Complexity: Low
+- [ ] **Frontend: Direct Axios Usage vs. `api.js`**
+  - Description: Some components directly import and use `axios` instead of the configured `api` instance from `frontend/src/services/api.js`. This bypasses interceptors for token management and error handling.
+  - Affected Files:
+    - `frontend/src/components/pathway/PathwayDetail.jsx` (L10 `import axios from 'axios';`)
+    - `frontend/src/components/pathway/PathwayEditor.jsx` (L10 `import axios from 'axios';`)
+    - `frontend/src/components/project/ProjectDetail.jsx` (L10 `import axios from 'axios';`)
+    - `frontend/src/components/project/ProjectTree.jsx` (L10 `import axios from 'axios';`)
+    - `frontend/src/components/search/SearchBar.jsx` (L4 `import axios from 'axios';`)
+    - `frontend/src/components/workspace/WorkspaceDetail.jsx` (L10 `import axios from 'axios';`)
+    - `frontend/src/components/workspace/WorkspaceList.jsx` (L6 `import axios from 'axios';`)
+    - `frontend/src/context/AuthContext.jsx` (L2 `import axios from 'axios';`)
+    - `frontend/src/pages/AdminPanel.jsx` (L2 `import axios from 'axios';`)
+  - Reproduction Steps: Observe network requests from these components; they won't have the Authorization header if not logged in, or won't trigger the interceptor's 401 redirect.
 
-- [ ] **Frontend: ProjectTree `FolderNode` context menu positioning**: The context menu might appear off-screen or not relative to the clicked element.
-  - Description: Implement more robust positioning for the context menu.
-  - Affected Files: `frontend/src/components/project/ProjectTree.jsx`
-  - Estimated Complexity: Medium
+- [ ] **Frontend: Component Reusability**
+  - Description: Some components might have duplicated logic or could be broken down into smaller, more reusable components (e.g., form inputs, list items).
+  - Affected Files: `frontend/src/components/auth/Login.jsx`, `frontend/src/components/auth/Register.jsx` (similar form structures).
+  - Reproduction Steps: Review component structure for opportunities for abstraction.
 
-## 3. Performance Optimizations
+## 4. USER EXPERIENCE ISSUES
 
-- [ ] **Backend: Mongoose Population Optimization**: Use `.select()` to retrieve only necessary fields when populating references to reduce data transfer.
-  - Description: For example, when populating `owner` or `members`, only fetch `name` and `email` instead of the entire user object.
-  - Affected Files: `backend/controllers/project.controller.js`, `backend/controllers/workspace.controller.js`, `backend/controllers/pathway.controller.js` (for items).
-  - Estimated Complexity: Medium
+- [ ] **Incomplete Pathway Item Display**
+  - Description: In `PathwayDetail` and `PathwayEditor`, `item.content` is displayed directly, which is an ObjectId. The actual content (URL, markdown) needs to be fetched and rendered.
+  - Affected Files:
+    - `frontend/src/components/pathway/PathwayDetail.jsx` (L32 `<li>{item.type}</li>`)
+    - `frontend/src/components/pathway/PathwayEditor.jsx` (L79 `<span>{item.type}: {item.content}</span>`)
+  - Reproduction Steps: Create a pathway with items and view its details.
 
-- [ ] **Backend: Indexing Database Fields**: Add indexes to frequently queried fields in Mongoose schemas.
-  - Description: Fields like `email` in User, `owner` in Workspace/Project, `project` in Folder/Pathway, `folder` in Pathway.
-  - Affected Files: `backend/models/User.js`, `backend/models/Workspace.js`, `backend/models/Project.js`, `backend/models/Folder.js`, `backend/models/Pathway.js`.
-  - Estimated Complexity: Low
+- [ ] **ProjectTree Search Filtering Scope**
+  - Description: The `matchesSearch` function in `ProjectTree` only checks `item.name` for folders and `item.title` for pathways. It should also include `description` for both.
+  - Affected Files: `frontend/src/components/project/ProjectTree.jsx` (L18 `matchesSearch`, L70 `filteredFolders`)
+  - Reproduction Steps: Search for a folder or pathway by its description.
 
-- [ ] **Backend: Rate Limiting**: Implement rate limiting for API endpoints to prevent abuse and improve stability.
-  - Description: Protect against brute-force attacks and excessive requests.
-  - Affected Files: `backend/server.js` (new middleware).
-  - Estimated Complexity: Medium
+- [ ] **ProjectTree Context Menu Positioning**
+  - Description: The context menu in `ProjectTree` uses absolute positioning based on `e.clientX` and `e.clientY`, which might cause it to appear off-screen or not ideally positioned relative to the clicked element, especially on smaller screens or near edges.
+  - Affected Files: `frontend/src/components/project/ProjectTree.jsx` (L58 `style={{ top: contextMenuPosition.y, left: contextMenuPosition.x }}`)
+  - Reproduction Steps: Right-click on folder nodes in various screen positions.
 
-- [ ] **Frontend: Lazy Loading Components**: Implement lazy loading for components that are not immediately needed.
-  - Description: Use `React.lazy` and `Suspense` for routes or large components to reduce initial bundle size.
-  - Affected Files: `frontend/src/App.jsx`, various page and complex components.
-  - Estimated Complexity: Medium
+- [ ] **Missing Responsive Design Considerations**
+  - Description: While Tailwind CSS is used, explicit responsive design adjustments (e.g., for sidebar collapse on mobile, layout changes) are not evident in all components.
+  - Affected Files: All frontend components, especially layout components (`Header`, `Sidebar`, `Footer`).
+  - Reproduction Steps: Resize the browser window to mobile dimensions.
 
-- [ ] **Frontend: Debounce Search Input**: Debounce the search input in `SearchBar` and `ProjectTree` to reduce API calls.
-  - Description: Only trigger search after a short delay from the last keystroke.
-  - Affected Files: `frontend/src/components/search/SearchBar.jsx`, `frontend/src/components/project/ProjectTree.jsx`.
-  - Estimated Complexity: Low
+## 5. PERFORMANCE & SECURITY
 
-## 4. Security Improvements
+### Performance
+- [ ] **Backend: Mongoose Population Optimization**
+  - Description: When populating referenced documents, often the entire document is fetched. Using `.select()` can limit the fields retrieved, reducing data transfer and improving query performance.
+  - Affected Files:
+    - `backend/controllers/project.controller.js` (L145 `populate('folders')`)
+    - `backend/controllers/workspace.controller.js` (L150 `workspace.members.unshift(newMember);` - when adding members, the populated user object might be larger than needed)
+    - `backend/controllers/auth.controller.js` (L112 `select('-password')` is good, but other populations might benefit)
+  - Reproduction Steps: Monitor network traffic and database query times for populated routes.
 
-- [ ] **Backend: Input Validation (Comprehensive)**: Implement more comprehensive input validation using `express-validator` for all incoming request bodies and query parameters.
-  - Description: Ensure all fields meet expected formats and constraints to prevent injection attacks and malformed data.
-  - Affected Files: All `routes/*.js` files and corresponding `controllers/*.js`.
-  - Estimated Complexity: High
+- [ ] **Backend: Database Indexing**
+  - Description: Missing database indexes on frequently queried fields can lead to slow query performance on large datasets.
+  - Affected Files:
+    - `backend/models/User.js`: `email` (already unique, but explicit index can help query speed)
+    - `backend/models/Workspace.js`: `owner`
+    - `backend/models/Project.js`: `owner`, `workspace`
+    - `backend/models/Folder.js`: `project`, `parentFolder`
+    - `backend/models/Pathway.js`: `project`, `folder`, `parentPathway`
+  - Reproduction Steps: Populate database with large amounts of data and run queries.
 
-- [ ] **Backend: Role-Based Authorization (Granular)**: Implement more granular role-based access control for all API endpoints.
-  - Description: Ensure only authorized users (e.g., admins) can access specific routes (e.g., `getUsers`, `updateUser` for other users).
-  - Affected Files: All `controllers/*.js` files.
-  - Estimated Complexity: High
+- [ ] **Frontend: Debounce Search Inputs**
+  - Description: The `SearchBar` and `ProjectTree` search inputs trigger API calls on every keystroke, which can be inefficient for rapid typing.
+  - Affected Files:
+    - `frontend/src/components/search/SearchBar.jsx` (L10 `onChange` triggers `setQuery`)
+    - `frontend/src/components/project/ProjectTree.jsx` (L86 `onChange` triggers `setSearchTerm`)
+  - Reproduction Steps: Type quickly into the search bars and observe network requests.
 
-- [ ] **Backend: Environment Variables for Sensitive Data**: Ensure all sensitive data (JWT secret, database URI) are loaded from environment variables and not hardcoded. (Already done, but good to list as a check).
-  - Description: Verify `.env` and `.gitignore` are correctly set up.
-  - Affected Files: `.env`, `.gitignore`, `backend/config/db.js`, `backend/controllers/auth.controller.js`.
-  - Estimated Complexity: Low
+### Security
+- [ ] **Backend: Comprehensive Input Validation**
+  - Description: While `express-validator` is used for auth routes, it's not consistently applied to all incoming request bodies and query parameters across all routes. This can lead to vulnerabilities like injection attacks or unexpected data.
+  - Affected Files: All `backend/routes/*.js` and corresponding `backend/controllers/*.js` files (e.g., `createWorkspace`, `updateWorkspace`, `createProject`, `updateProject`, `createPathway`, `updatePathway`, `addItem`, `addMember`, `updateUser`)
+  - Reproduction Steps: Send malformed or unexpected data to various API endpoints.
 
-- [ ] **Backend: Helmet for Security Headers**: Implement Helmet middleware to set various HTTP headers for security.
-  - Description: Protect against common web vulnerabilities like XSS, clickjacking, etc.
-  - Affected Files: `backend/server.js`.
-  - Estimated Complexity: Low
+- [ ] **Backend: Granular Role-Based Authorization**
+  - Description: The `protect` middleware only checks for authentication. More granular authorization checks (e.g., ensuring a user can only update their own project/workspace, or only admins can access user lists) are implemented manually in controllers, but could be centralized or made more robust.
+  - Affected Files:
+    - `backend/controllers/user.controller.js` (L65 `if (user.id.toString() !== req.user.id)`) - for self-update
+    - `backend/controllers/workspace.controller.js` (L65, L100, L130, L155 `if (workspace.owner.toString() !== req.user.id)`) - for ownership checks
+    - `backend/controllers/project.controller.js` (L65, L100, L130, L155 `if (project.owner.toString() !== req.user.id)`) - for ownership checks
+    - `backend/routes/user.routes.js` (L5 `getUsers` is accessible to any authenticated user, but should be admin-only)
+  - Reproduction Steps: Attempt to access or modify resources that you should not have permission for.
 
-- [ ] **Backend: CORS Configuration**: Review and tighten CORS configuration if necessary for production.
-  - Description: Ensure only allowed origins can access the API.
-  - Affected Files: `backend/server.js`.
-  - Estimated Complexity: Low
+- [ ] **Backend: Missing Security Headers (Helmet)**
+  - Description: The application does not use a middleware like `helmet` to set various HTTP headers that help protect against common web vulnerabilities (e.g., XSS, clickjacking, insecure connections).
+  - Affected Files: `backend/server.js`
+  - Reproduction Steps: Inspect HTTP response headers.
 
-- [ ] **Backend: Password Hashing (bcrypt salt rounds)**: Ensure bcrypt uses a sufficient number of salt rounds (e.g., 10 or 12). (Currently 10, which is good).
-  - Description: Verify the strength of password hashing.
-  - Affected Files: `backend/controllers/auth.controller.js`.
-  - Estimated Complexity: Low
+- [ ] **Backend: CORS Configuration Review**
+  - Description: `cors()` is used without specific options, which means it allows all origins. For production, this should be restricted to known origins.
+  - Affected Files: `backend/server.js` (L14 `app.use(cors());`)
+  - Reproduction Steps: Check CORS headers in network requests.
 
-## 5. Code Quality Issues
+- [ ] **Backend: JWT Secret Exposure**
+  - Description: While `JWT_SECRET` is in `.env`, ensure it's a strong, randomly generated key and not the default `supersecretjwtkey` from `.env.example`.
+  - Affected Files: `backend/.env.example`, `backend/controllers/auth.controller.js` (L40, L88), `backend/middleware/auth.middleware.js` (L25)
+  - Reproduction Steps: Review `.env` file.
 
-- [ ] **Backend: Consistent Error Handling**: Centralize and standardize error handling across all controllers.
-  - Description: Use the `error.middleware.js` consistently and ensure all `try-catch` blocks return appropriate `ErrorResponse` instances.
-  - Affected Files: All `controllers/*.js` files.
-  - Estimated Complexity: Medium
+## 6. BEST PRACTICES TO IMPLEMENT
 
-- [ ] **Backend: JSDoc Comments**: Add comprehensive JSDoc comments to all functions, routes, and models as per the `GEMINI.md` specification.
-  - Description: Improve code readability and maintainability.
-  - Affected Files: All backend `.js` files.
-  - Estimated Complexity: High
+- [ ] **Backend: Centralized Configuration for Constants**
+  - Description: Magic numbers and strings (e.g., JWT expiry `3600`) are hardcoded. These should be moved to a centralized configuration file or environment variables for easier management and consistency.
+  - Affected Files: `backend/controllers/auth.controller.js` (L40, L88)
+  - Reproduction Steps: Review code for hardcoded values.
 
-- [ ] **Frontend: Prop Types Validation**: Implement PropTypes for all React components to validate props.
-  - Description: Improve component reusability and prevent common bugs.
+- [ ] **Backend: Robust Logging**
+  - Description: Current logging relies on `console.error`. A more robust logging solution (e.g., Winston, Morgan) would provide better insights into application behavior, errors, and request/response cycles.
+  - Affected Files: `backend/server.js`, all `backend/controllers/*.js`, `backend/middleware/error.middleware.js`
+  - Reproduction Steps: Observe server logs during operation.
+
+- [ ] **Frontend: PropTypes for Components**
+  - Description: React components do not have PropTypes defined, which can lead to unexpected behavior if incorrect props are passed.
   - Affected Files: All `frontend/src/components/**/*.jsx` files.
-  - Estimated Complexity: High
+  - Reproduction Steps: Pass incorrect props to components and observe behavior (no warnings).
 
-- [ ] **Frontend: Consistent State Management**: Review and ensure consistent patterns for state management (useState, useContext) across components.
-  - Description: Avoid unnecessary state, lift state up where appropriate.
-  - Affected Files: All `frontend/src/components/**/*.jsx` files.
-  - Estimated Complexity: Medium
+- [ ] **Frontend: Custom Hooks for Data Fetching**
+  - Description: Many components directly handle data fetching logic within `useEffect`. Custom hooks could abstract this logic, making components cleaner and data fetching reusable.
+  - Affected Files: `frontend/src/components/pathway/PathwayDetail.jsx`, `frontend/src/components/pathway/PathwayEditor.jsx`, `frontend/src/components/project/ProjectDetail.jsx`, `frontend/src/components/project/ProjectTree.jsx`, `frontend/src/components/search/SearchBar.jsx`, `frontend/src/components/workspace/WorkspaceDetail.jsx`, `frontend/src/components/workspace/WorkspaceList.jsx`, `frontend/src/context/AuthContext.jsx`, `frontend/src/pages/AdminPanel.jsx`.
+  - Reproduction Steps: Review data fetching logic in components.
 
-- [ ] **Frontend: Axios Interceptors Usage**: Ensure all API calls leverage the `api.js` Axios instance with interceptors for consistent error handling and token management.
-  - Description: Avoid direct `axios.get/post` calls where `api.get/post` should be used.
-  - Affected Files: `frontend/src/components/**/*.jsx` (e.g., `PathwayDetail`, `PathwayEditor`, `ProjectDetail`, `SearchBar`, `WorkspaceDetail`, `WorkspaceList`, `AdminPanel`).
-  - Estimated Complexity: Medium
+- [ ] **Frontend: Form Handling Library**
+  - Description: Forms are handled manually with `useState` and `onChange` handlers. For more complex forms, a library like Formik or React Hook Form could simplify state management, validation, and submission.
+  - Affected Files: `frontend/src/components/auth/Login.jsx`, `frontend/src/components/auth/Register.jsx`, `frontend/src/components/pathway/PathwayEditor.jsx` (add item form), `frontend/src/components/workspace/WorkspaceDetail.jsx` (add member form).
+  - Reproduction Steps: Review form implementations.
 
-- [ ] **General: Naming Conventions**: Verify all variables, functions, components, and files adhere to the specified naming conventions (camelCase, PascalCase, kebab-case, UPPER_SNAKE_CASE).
-  - Description: Ensure consistency across the entire codebase.
-  - Affected Files: All files.
-  - Estimated Complexity: Medium
-
-## 6. Best Practices to Implement
-
-- [ ] **Backend: Centralized Configuration**: Move magic strings and numbers (e.g., JWT expiry, bcrypt salt rounds) into a centralized configuration file or environment variables.
-  - Description: Improve maintainability and flexibility.
-  - Affected Files: `backend/controllers/auth.controller.js`.
-  - Estimated Complexity: Low
-
-- [ ] **Backend: Logging**: Implement a more robust logging solution (e.g., Winston, Morgan) for server activities and errors.
-  - Description: Improve debugging and monitoring capabilities.
-  - Affected Files: `backend/server.js`, `backend/middleware/error.middleware.js`.
-  - Estimated Complexity: Medium
-
-- [ ] **Frontend: Custom Hooks for API Calls**: Create custom hooks (e.g., `useFetchProjects`, `useAuth`) to encapsulate API call logic and state management for data fetching.
-  - Description: Reduce boilerplate in components and improve reusability.
-  - Affected Files: `frontend/src/components/**/*.jsx` that make direct API calls, `frontend/src/hooks/` (new hooks).
-  - Estimated Complexity: High
-
-- [ ] **Frontend: UI Component Library/Design System**: Consider using a UI component library or establishing a design system for consistent UI/UX.
-  - Description: While Tailwind CSS is used, a component library can further standardize UI elements.
-  - Affected Files: All `frontend/src/components/**/*.jsx` files.
-  - Estimated Complexity: High
-
-- [ ] **Frontend: Form Handling Library**: Use a form handling library (e.g., Formik, React Hook Form) for complex forms.
-  - Description: Simplify form state management, validation, and submission.
-  - Affected Files: `frontend/src/components/auth/Login.jsx`, `frontend/src/components/auth/Register.jsx`, `frontend/src/components/pathway/PathwayEditor.jsx`, `frontend/src/components/workspace/WorkspaceDetail.jsx`.
-  - Estimated Complexity: Medium
-
-- [ ] **General: Comprehensive Testing**: Implement unit, integration, and end-to-end tests for both frontend and backend.
-  - Description: Ensure application stability and correctness.
-  - Affected Files: All files (new test files).
-  - Estimated Complexity: High
+- [ ] **General: Comprehensive Testing Strategy**
+  - Description: There are no evident unit, integration, or end-to-end tests for either the frontend or backend. Implementing a testing strategy is crucial for long-term maintainability and stability.
+  - Affected Files: All files (new test files would be created).
+  - Reproduction Steps: Attempt to run tests (none exist).

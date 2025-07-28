@@ -30,9 +30,9 @@ const Header = () => {
   );
 
   return (
-    <header className="bg-gray-800 text-white p-4">
+    <header className="bg-gray-800 text-white py-4 px-4">
       <div className="container mx-auto flex justify-between items-center">
-        <h1 className="text-xl">
+        <h1 className="text-2xl font-bold">
           <Link to="/">LMS</Link>
         </h1>
         <nav>{isAuthenticated ? authLinks : guestLinks}</nav>
