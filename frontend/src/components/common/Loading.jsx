@@ -1,9 +1,16 @@
 import React from 'react';
 
-const Loading = () => {
+const Loading = ({ message = "Loading..." }) => {
   return (
-    <div className="flex justify-center items-center my-8">
-      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary"></div>
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '100vh',
+      fontSize: '1.2rem',
+      color: '#555',
+    }}>
+      {message}
     </div>
   );
 };

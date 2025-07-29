@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15a4.718 4.718 0 0 0 5.681 4.924 4.72 4.72 0 0 0 5.682-4.924m-7.5 0H2.25m11.25 0h-4.5m5.681-11.82A8.001 8.001 0 1 0 4.502 15J9.56M4.502 15h-.148l-.073.201AH2.25 2.25 0 0 0 4.5 18.75V21h15v-2.25a2.25 2.25 0 0 0-2.183-2.244l-.074-.201m-9.75-3.077h3.375M3 12h18" />
+</svg>

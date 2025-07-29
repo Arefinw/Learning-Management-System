@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { AuthContext } from '../../context/AuthContext';
-import axios from 'axios';
+import api from '../../services/api'; // Use the centralized API service
 import { Link } from 'react-router-dom';
+import { message } from 'antd'; // Import Ant Design message component
+import Loading from '../common/Loading';
+import Error from '../common/Error';
 
 const FolderNode = ({ folder, searchTerm }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -112,22 +115,37 @@ const ProjectTree = ({ projectId }) => {
   const { user } = useContext(AuthContext);
   const [project, setProject] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (user) {
-      axios
-        .get(`/api/projects/${projectId}/tree`)
-        .then((res) => {
-          setProject(res.data);
-        })
-        .catch((err) => {
+    const fetchProjectTree = async () => {
+      if (user) {
+        try {
+          const res = await api.get(`/api/projects/${projectId}/tree`);
+          setProject(res.data.data); // Access data property
+          setLoading(false);
+        } catch (err) {
           console.error(err);
-        });
-    }
+          setError(err.response?.data?.message || 'Failed to load project tree.');
+          message.error(err.response?.data?.message || 'Failed to load project tree.');
+          setLoading(false);
+        }
+      }
+    };
+    fetchProjectTree();
   }, [user, projectId]);
 
-  if (!project) {
+  if (loading) {
     return <Loading />;
+  }
+
+  if (error) {
+    return <Error message={error} />;
+  }
+
+  if (!project) {
+    return <Error message="Project not found." />;
   }
 
   const filteredFolders = project.folders.filter((folder) =>

@@ -1,6 +1,6 @@
 /**
  * @file WorkspaceDetail.jsx
- * @description This file implements the WorkspaceDetail component, which displays the details of a single workspace.
+ * @description This file implements the WorkspaceDetail component, which displays the details of a single workspace using Ant Design.
  * It allows users to view workspace information, manage members, and view associated projects.
  */
 
@@ -8,9 +8,15 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../services/api';
-import Loading from '../common/Loading';
-import Error from '../common/Error';
-import Modal from '../common/Modal';
+
+
+// Ant Design Components
+import { Layout, Row, Col, Card, Button, List, Modal, Typography, Space, Form, Input, Select } from 'antd';
+import { EditOutlined, UserAddOutlined, ProjectOutlined } from '@ant-design/icons';
+
+const { Content } = Layout;
+const { Title, Text } = Typography;
+const { Option } = Select;
 
 /**
  * WorkspaceDetail Component
@@ -23,8 +29,7 @@ const WorkspaceDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
-  const [newMemberEmail, setNewMemberEmail] = useState('');
-  const [addMemberError, setAddMemberError] = useState(null);
+  const [addMemberForm] = Form.useForm();
 
   useEffect(() => {
     /**
@@ -51,19 +56,18 @@ const WorkspaceDetail = () => {
    * Handles adding a new member to the workspace.
    * @async
    * @function handleAddMember
-   * @param {Event} e - The form submission event.
+   * @param {object} values - Form values containing email and role.
    * @returns {Promise<void>}
    */
-  const handleAddMember = async (e) => {
-    e.preventDefault();
-    setAddMemberError(null);
+  const handleAddMember = async (values) => {
     try {
-      const response = await api.post(`/api/workspaces/${id}/members`, { email: newMemberEmail });
+      const response = await api.post(`/api/workspaces/${id}/members`, values);
       setWorkspace(response.data.data); // Update workspace with new member list
-      setNewMemberEmail('');
+      addMemberForm.resetFields();
       setShowAddMemberModal(false);
+      Modal.success({ content: 'Member added successfully!' });
     } catch (err) {
-      setAddMemberError(err.response?.data?.message || err.message);
+      Modal.error({ content: err.response?.data?.message || err.message });
     }
   };
 
@@ -80,123 +84,126 @@ const WorkspaceDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">{workspace.name}</h1>
-        <Link
-          to={`/workspaces/${workspace._id}/edit`}
-          className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300"
+    <Layout className="p-16 bg-transparent">
+      <Content>
+        <Row justify="space-between" align="middle" style={{ marginBottom: '32px' }}>
+          <Col>
+            <Title level={2} style={{ color: '#333333' }}>{workspace.name}</Title>
+          </Col>
+          <Col>
+            <Link to={`/workspaces/${workspace._id}/edit`}>
+              <Button type="primary" icon={<EditOutlined />}>Edit Workspace</Button>
+            </Link>
+          </Col>
+        </Row>
+
+        <Card title={<Title level={3} style={{ color: '#6A5ACD' }}>Details</Title>} style={{ marginBottom: '32px' }}>
+          <Text strong style={{ color: '#6A5ACD' }}>Description:</Text> <Text>{workspace.description}</Text><br />
+          <Text strong style={{ color: '#6A5ACD' }}>Owner:</Text> <Text>{workspace.owner?.name || 'N/A'}</Text><br />
+          <Text strong style={{ color: '#6A5ACD' }}>Visibility:</Text> <Text>{workspace.visibility}</Text><br />
+          <Text strong style={{ color: '#6A5ACD' }}>Created At:</Text> <Text>{new Date(workspace.createdAt).toLocaleDateString()}</Text>
+        </Card>
+
+        <Card
+          title={<Title level={3} style={{ color: '#6A5ACD' }}>Members</Title>}
+          extra={
+            <Button type="primary" icon={<UserAddOutlined />} onClick={() => setShowAddMemberModal(true)}>
+              Add Member
+            </Button>
+          }
+          style={{ marginBottom: '32px' }}
         >
-          Edit Workspace
-        </Link>
-      </div>
+          {workspace.members && workspace.members.length > 0 ? (
+            <List
+              itemLayout="horizontal"
+              dataSource={workspace.members}
+              renderItem={(member) => (
+                <List.Item style={{ padding: '16px 0' }}>
+                  <List.Item.Meta
+                    title={<Text strong>{member.user.name}</Text>}
+                    description={<Text type="secondary">{member.user.email} ({member.role})</Text>}
+                  />
+                  {/* Add remove member functionality here if needed */}
+                </List.Item>
+              )}
+            />
+          ) : (
+            <Text type="secondary">No members in this workspace yet.</Text>
+          )}
+        </Card>
 
-      <section className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Details</h2>
-        <p className="text-gray-700 mb-2"><strong>Description:</strong> {workspace.description}</p>
-        <p className="text-gray-700 mb-2"><strong>Owner:</strong> {workspace.owner?.name || 'N/A'}</p>
-        <p className="text-gray-700 mb-2"><strong>Visibility:</strong> {workspace.visibility}</p>
-        <p className="text-gray-700 mb-2"><strong>Created At:</strong> {new Date(workspace.createdAt).toLocaleDateString()}</p>
-      </section>
+        <Card
+          title={<Title level={3} style={{ color: '#6A5ACD' }}>Projects</Title>}
+          extra={
+            <Link to={`/projects/new?workspaceId=${workspace._id}`}>
+              <Button type="primary" icon={<PlusOutlined />}>Create New Project</Button>
+            </Link>
+          }
+        >
+          {workspace.projects && workspace.projects.length > 0 ? (
+            <List
+              itemLayout="horizontal"
+              dataSource={workspace.projects}
+              renderItem={(project) => (
+                <List.Item style={{ padding: '16px 0' }}>
+                  <List.Item.Meta
+                    title={<Link to={`/projects/${project._id}`}><Text strong>{project.name}</Text></Link>}
+                    description={<Text type="secondary">{project.description}</Text>}
+                  />
+                </List.Item>
+              )}
+            />
+          ) : (
+            <Text type="secondary">No projects in this workspace yet.</Text>
+          )}
+        </Card>
 
-      <section className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold text-gray-700">Members</h2>
-          <button
-            onClick={() => setShowAddMemberModal(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300"
-          >
-            Add Member
-          </button>
-        </div>
-        {workspace.members && workspace.members.length > 0 ? (
-          <ul className="divide-y divide-gray-200">
-            {workspace.members.map((member) => (
-              <li key={member.user._id} className="py-3 flex justify-between items-center">
-                <div>
-                  <p className="text-gray-800 font-medium">{member.user.name}</p>
-                  <p className="text-sm text-gray-500">{member.user.email} ({member.role})</p>
-                </div>
-                {/* Add remove member functionality here if needed */}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-500">No members in this workspace yet.</p>
-        )}
-      </section>
-
-      <section className="bg-white shadow-md rounded-lg p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold text-gray-700">Projects</h2>
-          <Link
-            to={`/projects/new?workspaceId=${workspace._id}`}
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300"
-          >
-            Create New Project
-          </Link>
-        </div>
-        {workspace.projects && workspace.projects.length > 0 ? (
-          <ul className="divide-y divide-gray-200">
-            {workspace.projects.map((project) => (
-              <li key={project._id} className="py-3">
-                <Link to={`/projects/${project._id}`} className="text-blue-600 hover:underline font-medium">
-                  {project.name}
-                </Link>
-                <p className="text-sm text-gray-500">{project.description}</p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-500">No projects in this workspace yet.</p>
-        )}
-      </section>
-
-      {showAddMemberModal && (
         <Modal
-          title="Add New Member"
+          title={<Title level={4} style={{ color: '#6A5ACD' }}>Add New Member</Title>}
+          open={showAddMemberModal}
           onCancel={() => {
             setShowAddMemberModal(false);
-            setNewMemberEmail('');
-            setAddMemberError(null);
+            addMemberForm.resetFields();
           }}
+          footer={null} // Hide default footer buttons
         >
-          <form onSubmit={handleAddMember} className="space-y-4">
-            <div>
-              <label htmlFor="memberEmail" className="block text-sm font-medium text-gray-700">Member Email</label>
-              <input
-                type="email"
-                id="memberEmail"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                value={newMemberEmail}
-                onChange={(e) => setNewMemberEmail(e.target.value)}
-                required
-              />
-            </div>
-            {addMemberError && <p className="text-red-500 text-sm">{addMemberError}</p>}
-            <div className="flex justify-end space-x-2">
-              <button
-                type="button"
-                onClick={() => {
+          <Form form={addMemberForm} onFinish={handleAddMember} layout="vertical" style={{ gap: '16px' }}>
+            <Form.Item
+              name="email"
+              label="Member Email"
+              rules={[{ required: true, message: 'Please input member email!', type: 'email' }]}
+            >
+              <Input size="large" />
+            </Form.Item>
+            <Form.Item
+              name="role"
+              label="Role"
+              initialValue="member"
+              rules={[{ required: true, message: 'Please select a role!' }]}
+            >
+              <Select size="large">
+                <Option value="member">Member</Option>
+                <Option value="editor">Editor</Option>
+                <Option value="admin">Admin</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item style={{ marginBottom: '0' }}>
+              <Space>
+                <Button onClick={() => {
                   setShowAddMemberModal(false);
-                  setNewMemberEmail('');
-                  setAddMemberError(null);
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Add Member
-              </button>
-            </div>
-          </form>
+                  addMemberForm.resetFields();
+                }}>
+                  Cancel
+                </Button>
+                <Button type="primary" htmlType="submit">
+                  Add Member
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
         </Modal>
-      )}
-    </div>
+      </Content>
+    </Layout>
   );
 };
 

@@ -17,7 +17,6 @@ const pathwaySchema = new mongoose.Schema({
       },
       content: {
         type: mongoose.Schema.Types.ObjectId,
-        refPath: 'items.type',
       },
       completed: {
         type: Boolean,

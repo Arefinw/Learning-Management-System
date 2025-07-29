@@ -1,159 +1,225 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
+import Loading from '../common/Loading';
+import Error from '../common/Error';
+
+// Ant Design Components
+import { Layout, Card, Typography, Button, List, Space, Form, Input, Select, Checkbox, Modal, Spin, Alert } from 'antd';
+import {
+  EditOutlined,
+  PlusOutlined,
+  DeleteOutlined,
+  UpOutlined,
+  DownOutlined,
+  LinkOutlined,
+  VideoCameraOutlined,
+  FileTextOutlined,
+  ExclamationCircleOutlined,
+} from '@ant-design/icons';
+
+const { Content } = Layout;
+const { Title, Text } = Typography;
+const { Option } = Select;
+const { confirm } = Modal;
 
 const PathwayEditor = () => {
   const { user } = useContext(AuthContext);
   const { id } = useParams();
   const [pathway, setPathway] = useState(null);
-  const [newItemType, setNewItemType] = useState('Link');
-  const [newItemContent, setNewItemContent] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [newItemForm] = Form.useForm();
 
   useEffect(() => {
-    if (user) {
-      axios
-        .get(`/api/pathways/${id}`)
-        .then((res) => {
-          setPathway(res.data);
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    }
-  }, [user, id]);
+    const fetchPathwayDetails = async () => {
+      try {
+        const response = await api.get(`/api/pathways/${id}`);
+        setPathway(response.data.data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.response?.data?.message || err.message);
+        setLoading(false);
+      }
+    };
 
-  const handleAddItem = async () => {
+    fetchPathwayDetails();
+  }, [id]);
+
+  const handleAddItem = async (values) => {
     try {
-      const res = await axios.post(`/api/pathways/${id}/items`, {
-        type: newItemType,
-        content: newItemContent,
-      });
-      setPathway({ ...pathway, items: res.data });
-      setNewItemContent('');
+      const response = await api.post(`/api/pathways/${id}/items`, values);
+      setPathway(response.data.data); // Backend should return updated pathway with new item
+      newItemForm.resetFields();
+      Modal.success({ content: 'Item added successfully!' });
     } catch (err) {
-      console.error(err.response.data);
+      Modal.error({ content: err.response?.data?.message || err.message });
     }
   };
 
-  const handleRemoveItem = async (itemIndex) => {
-    // This would require a backend endpoint to remove items from a pathway
-    // For now, we'll just remove it from the frontend state
-    const updatedItems = pathway.items.filter((_, index) => index !== itemIndex);
-    setPathway({ ...pathway, items: updatedItems });
-    // In a real application, you would send a DELETE request to the backend
+  const handleRemoveItem = async (itemId) => {
+    try {
+      await api.delete(`/api/pathways/${id}/items/${itemId}`);
+      setPathway((prevPathway) => ({
+        ...prevPathway,
+        items: prevPathway.items.filter((item) => item._id !== itemId),
+      }));
+      Modal.success({ content: 'Item removed successfully!' });
+    } catch (err) {
+      Modal.error({ content: err.response?.data?.message || err.message });
+    }
   };
 
-  const handleToggleCompleted = (itemIndex) => {
-    const updatedItems = pathway.items.map((item, index) =>
-      index === itemIndex ? { ...item, completed: !item.completed } : item
+  const showRemoveConfirm = (item) => {
+    confirm({
+      title: `Do you really want to remove this item?`,
+      icon: <ExclamationCircleOutlined />,
+      content: `${item.type}: ${item.content}`,
+      okText: 'Yes',
+      okType: 'danger',
+      cancelText: 'No',
+      onOk() {
+        handleRemoveItem(item._id);
+      },
+    });
+  };
+
+  const handleToggleCompleted = async (item) => {
+    try {
+      const updatedItem = { ...item, completed: !item.completed };
+      const response = await api.put(`/api/pathways/${id}/items/${item._id}`, updatedItem);
+      setPathway(response.data.data); // Backend should return updated pathway
+    } catch (err) {
+      Modal.error({ content: err.response?.data?.message || err.message });
+    }
+  };
+
+  const handleMoveItem = async (itemId, direction) => {
+    try {
+      const response = await api.put(`/api/pathways/${id}/items/${itemId}/move`, { direction });
+      setPathway(response.data.data); // Backend should return updated pathway with new order
+    } catch (err) {
+      Modal.error({ content: err.response?.data?.message || err.message });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen-content">
+        <Spin size="large" tip="Loading Pathway..." />
+      </div>
     );
-    setPathway({ ...pathway, items: updatedItems });
-    // In a real application, you would send a PUT request to the backend to update completion status
-  };
-
-  const handleMoveItem = (fromIndex, toIndex) => {
-    const updatedItems = [...pathway.items];
-    const [movedItem] = updatedItems.splice(fromIndex, 1);
-    updatedItems.splice(toIndex, 0, movedItem);
-    setPathway({ ...pathway, items: updatedItems });
-    // In a real application, you would send a PUT request to the backend to update item order
-  };
-
-  if (!pathway) {
-    return <Loading />;
   }
 
+  if (error) {
+    return <Error message={error} />;
+  }
+
+  if (!pathway) {
+    return <Error message="Pathway not found." />;
+  }
+
+  const getItemIcon = (type) => {
+    switch (type) {
+      case 'Link':
+        return <LinkOutlined />;
+      case 'Video':
+        return <VideoCameraOutlined />;
+      case 'Document':
+        return <FileTextOutlined />;
+      default:
+        return <BookOutlined />;
+    }
+  };
+
   return (
-    <div className="card">
-      <h2 className="text-2xl font-bold mb-4">Editing: {pathway.title}</h2>
-      <p className="mb-4">{pathway.description}</p>
+    <Layout className="p-16 bg-transparent">
+      <Content>
+        <Title level={2} style={{ color: '#333333', marginBottom: '32px' }}>Editing: {pathway.title}</Title>
 
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold mb-3">Pathway Items</h3>
-        <ul>
-          {pathway.items.map((item, index) => (
-            <li key={index} className="flex items-center mb-2 py-1 border-b border-neutral-border last:border-b-0">
-              <input
-                type="checkbox"
-                checked={item.completed}
-                onChange={() => handleToggleCompleted(index)}
-                className="mr-2"
-              />
-              <span>{item.type}: {item.content}</span>
-              <div className="ml-auto flex items-center space-x-2">
-                <button
-                  onClick={() => handleRemoveItem(index)}
-                  className="btn btn-danger btn-sm"
+        <Card style={{ marginBottom: '32px' }}>
+          <Title level={3} style={{ color: '#6A5ACD' }}>Pathway Items</Title>
+          {pathway.items && pathway.items.length > 0 ? (
+            <List
+              itemLayout="horizontal"
+              dataSource={pathway.items}
+              renderItem={(item, index) => (
+                <List.Item
+                  actions={[
+                    <Button
+                      type="text"
+                      icon={<UpOutlined />}
+                      onClick={() => handleMoveItem(item._id, 'up')}
+                      disabled={index === 0}
+                      style={{ color: '#4b5563' }}
+                    />,
+                    <Button
+                      type="text"
+                      icon={<DownOutlined />}
+                      onClick={() => handleMoveItem(item._id, 'down')}
+                      disabled={index === pathway.items.length - 1}
+                      style={{ color: '#4b5563' }}
+                    />,
+                    <Button
+                      type="text"
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={() => showRemoveConfirm(item)}
+                    />,
+                  ]}
+                  style={{ padding: '16px 0' }}
                 >
-                  Remove
-                </button>
-                {index > 0 && (
-                  <button
-                    onClick={() => handleMoveItem(index, index - 1)}
-                    className="btn btn-secondary btn-sm"
-                  >
-                    Up
-                  </button>
-                )}
-                {index < pathway.items.length - 1 && (
-                  <button
-                    onClick={() => handleMoveItem(index, index + 1)}
-                    className="btn btn-secondary btn-sm"
-                  >
-                    Down
-                  </button>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="card">
-        <h4 className="text-xl font-semibold mb-3">Add New Item</h4>
-        <div className="form-group">
-          <label className="form-label" htmlFor="newItemType">Item Type</label>
-          <select
-            id="newItemType"
-            value={newItemType}
-            onChange={(e) => setNewItemType(e.target.value)}
-            className="form-control"
-          >
-            <option value="Link">Link</option>
-            <option value="Video">Video</option>
-            <option value="Document">Document</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label className="form-label" htmlFor="newItemContent">Content</label>
-          {newItemType === 'Document' ? (
-            <textarea
-              id="newItemContent"
-              value={newItemContent}
-              onChange={(e) => setNewItemContent(e.target.value)}
-              placeholder="Document Content (Markdown)"
-              className="form-control h-32"
-            ></textarea>
-          ) : (
-            <input
-              id="newItemContent"
-              type="text"
-              value={newItemContent}
-              onChange={(e) => setNewItemContent(e.target.value)}
-              placeholder="Content URL or ID"
-              className="form-control"
+                  <List.Item.Meta
+                    avatar={<Checkbox checked={item.completed} onChange={() => handleToggleCompleted(item)} />}
+                    title={<Text strong>{getItemIcon(item.type)} {item.type}: {item.content}</Text>}
+                    description={<Text type="secondary">{item.description}</Text>}
+                  />
+                </List.Item>
+              )}
             />
+          ) : (
+            <Text type="secondary">No items in this pathway yet.</Text>
           )}
-        </div>
-        <button
-          onClick={handleAddItem}
-          className="btn btn-primary mt-4"
-        >
-          Add Item
-        </button>
-      </div>
-    </div>
+        </Card>
+
+        <Card>
+          <Title level={3} style={{ color: '#6A5ACD' }}>Add New Item</Title>
+          <Form form={newItemForm} onFinish={handleAddItem} layout="vertical" style={{ gap: '16px' }}>
+            <Form.Item
+              name="type"
+              label={<span style={{ color: '#374151' }}>Item Type</span>}
+              rules={[{ required: true, message: 'Please select an item type!' }]}
+              initialValue="Link"
+            >
+              <Select size="large">
+                <Option value="Link">Link</Option>
+                <Option value="Video">Video</Option>
+                <Option value="Document">Document</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="content"
+              label={<span style={{ color: '#374151' }}>Content</span>}
+              rules={[{ required: true, message: 'Please input content!' }]}
+            >
+              <Input.TextArea rows={4} size="large" placeholder="Content URL, ID, or Markdown" />
+            </Form.Item>
+            <Form.Item
+              name="description"
+              label={<span style={{ color: '#374151' }}>Description (Optional)</span>}
+            >
+              <Input.TextArea rows={2} size="large" placeholder="Brief description of the item" />
+            </Form.Item>
+            <Form.Item style={{ marginBottom: '0' }}>
+              <Button type="primary" htmlType="submit" size="large" icon={<PlusOutlined />}>
+                Add Item
+              </Button>
+            </Form.Item>
+          </Form>
+        </Card>
+      </Content>
+    </Layout>
   );
 };
 

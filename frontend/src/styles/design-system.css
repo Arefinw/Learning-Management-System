@@ -196,6 +196,10 @@ a:focus {
   .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
+.gradient-background {
+  background: linear-gradient(to right, #6A5ACD, #8A2BE2);
+}
+
 /* Transitions */
 .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
 .ease-in-out { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }

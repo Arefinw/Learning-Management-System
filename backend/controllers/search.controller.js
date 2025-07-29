@@ -1,16 +1,17 @@
 const Project = require('../models/Project');
 const Folder = require('../models/Folder');
 const Pathway = require('../models/Pathway');
+const ErrorResponse = require('../utils/errorResponse');
 
 // @desc    Search across projects, folders, and pathways
 // @route   GET /api/search
 // @access  Private
-exports.search = async (req, res) => {
+exports.search = async (req, res, next) => {
   try {
     const { q } = req.query;
 
     if (!q) {
-      return res.status(400).json({ msg: 'Search query is required' });
+      return next(new ErrorResponse('Search query is required', 400));
     }
 
     const regex = new RegExp(q, 'i'); // Case-insensitive search
@@ -26,16 +27,19 @@ exports.search = async (req, res) => {
     });
 
     const pathways = await Pathway.find({
-      $or: [
-        { project: { $in: projects.map((p) => p._id) } },
-        { folder: { $in: folders.map((f) => f._id) } },
+      $and: [
+        {
+          $or: [
+            { project: { $in: projects.map((p) => p._id) } },
+            { folder: { $in: folders.map((f) => f._id) } },
+          ],
+        },
+        { $or: [{ title: regex }, { description: regex }] },
       ],
-      $or: [{ title: regex }, { description: regex }],
     });
 
-    res.json({ projects, folders, pathways });
+    res.status(200).json({ success: true, data: { projects, folders, pathways } });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 };

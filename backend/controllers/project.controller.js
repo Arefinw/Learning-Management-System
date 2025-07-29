@@ -2,41 +2,40 @@ const Project = require('../models/Project');
 const Workspace = require('../models/Workspace'); // Import Workspace model
 const Folder = require('../models/Folder'); // Import Folder model
 const Pathway = require('../models/Pathway'); // Import Pathway model
+const ErrorResponse = require('../utils/errorResponse');
 
 // @desc    Get all projects
 // @route   GET /api/projects
 // @access  Private
-exports.getProjects = async (req, res) => {
+exports.getProjects = async (req, res, next) => {
   try {
     const projects = await Project.find({ owner: req.user.id })
       .populate('owner', 'name email')
       .populate('workspace', 'name');
-    res.json({ success: true, data: projects });
+    res.status(200).json({ success: true, data: projects });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, error: 'Server error' });
+    next(err);
   }
 };
 
 // @desc    Get projects by workspace
 // @route   GET /api/workspaces/:workspaceId/projects
 // @access  Private
-exports.getProjectsByWorkspace = async (req, res) => {
+exports.getProjectsByWorkspace = async (req, res, next) => {
   try {
     const projects = await Project.find({ workspace: req.params.workspaceId, owner: req.user.id })
       .populate('owner', 'name email')
       .populate('workspace', 'name');
-    res.json({ success: true, data: projects });
+    res.status(200).json({ success: true, data: projects });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, error: 'Server error' });
+    next(err);
   }
 };
 
 // @desc    Create a project
 // @route   POST /api/projects
 // @access  Private
-exports.createProject = async (req, res) => {
+exports.createProject = async (req, res, next) => {
   const { name, description, workspace, visibility } = req.body;
 
   try {
@@ -57,15 +56,14 @@ exports.createProject = async (req, res) => {
 
     res.status(201).json({ success: true, data: project });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, error: 'Server error' });
+    next(err);
   }
 };
 
 // @desc    Get single project
 // @route   GET /api/projects/:id
 // @access  Private
-exports.getProject = async (req, res) => {
+exports.getProject = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id)
       .populate('owner', 'name email')
@@ -74,33 +72,32 @@ exports.getProject = async (req, res) => {
       .populate('pathways');
 
     if (!project) {
-      return res.status(404).json({ success: false, error: 'Project not found' });
+      return next(new ErrorResponse('Project not found', 404));
     }
 
     // Check for user authorization based on visibility
     if (project.visibility === 'private' && project.owner.toString() !== req.user.id) {
-      return res.status(401).json({ success: false, error: 'User not authorized' });
+      return next(new ErrorResponse('User not authorized', 401));
     }
     // For 'workspace' visibility, check if user is a member of the associated workspace
     if (project.visibility === 'workspace' && project.workspace) {
       const workspace = await Workspace.findById(project.workspace);
       if (!workspace || !workspace.members.some(member => member.user.toString() === req.user.id)) {
-        return res.status(401).json({ success: false, error: 'User not authorized to view this project' });
+        return next(new ErrorResponse('User not authorized to view this project', 401));
       }
     }
 
 
-    res.json({ success: true, data: project });
+    res.status(200).json({ success: true, data: project });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, error: 'Server error' });
+    next(err);
   }
 };
 
 // @desc    Update project
 // @route   PUT /api/projects/:id
 // @access  Private
-exports.updateProject = async (req, res) => {
+exports.updateProject = async (req, res, next) => {
   const { name, description, visibility } = req.body;
 
   // Build project object
@@ -113,41 +110,40 @@ exports.updateProject = async (req, res) => {
     let project = await Project.findById(req.params.id);
 
     if (!project) {
-      return res.status(404).json({ success: false, error: 'Project not found' });
+      return next(new ErrorResponse('Project not found', 404));
     }
 
     // Make sure user owns the project
     if (project.owner.toString() !== req.user.id) {
-      return res.status(401).json({ success: false, error: 'Not authorized' });
+      return next(new ErrorResponse('Not authorized', 401));
     }
 
     project = await Project.findByIdAndUpdate(
       req.params.id,
       { $set: projectFields },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
-    res.json({ success: true, data: project });
+    res.status(200).json({ success: true, data: project });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, error: 'Server error' });
+    next(err);
   }
 };
 
 // @desc    Delete project
 // @route   DELETE /api/projects/:id
 // @access  Private
-exports.deleteProject = async (req, res) => {
+exports.deleteProject = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id);
 
     if (!project) {
-      return res.status(404).json({ success: false, error: 'Project not found' });
+      return next(new ErrorResponse('Project not found', 404));
     }
 
     // Check for user
     if (project.owner.toString() !== req.user.id) {
-      return res.status(401).json({ success: false, error: 'User not authorized' });
+      return next(new ErrorResponse('User not authorized', 401));
     }
 
     // Remove project from associated workspace
@@ -159,54 +155,52 @@ exports.deleteProject = async (req, res) => {
     await Folder.deleteMany({ project: project._id });
     await Pathway.deleteMany({ project: project._id });
 
-    await project.remove();
+    await project.deleteOne();
 
-    res.json({ success: true, message: 'Project removed' });
+    res.status(200).json({ success: true, message: 'Project removed' });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, error: 'Server error' });
+    next(err);
   }
 };
 
 // @desc    Get project tree
 // @route   GET /api/projects/:id/tree
 // @access  Private
-exports.getProjectTree = async (req, res) => {
+exports.getProjectTree = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id)
       .populate('folders')
       .populate('pathways');
 
     if (!project) {
-      return res.status(404).json({ success: false, error: 'Project not found' });
+      return next(new ErrorResponse('Project not found', 404));
     }
 
     // Check for user
     if (project.owner.toString() !== req.user.id) {
-      return res.status(401).json({ success: false, error: 'User not authorized' });
+      return next(new ErrorResponse('User not authorized', 401));
     }
 
-    res.json({ success: true, data: project });
+    res.status(200).json({ success: true, data: project });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, error: 'Server error' });
+    next(err);
   }
 };
 
 // @desc    Delete folder from project
 // @route   DELETE /api/projects/:projectId/folders/:folderId
 // @access  Private
-exports.deleteFolderFromProject = async (req, res) => {
+exports.deleteFolderFromProject = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.projectId);
 
     if (!project) {
-      return res.status(404).json({ success: false, error: 'Project not found' });
+      return next(new ErrorResponse('Project not found', 404));
     }
 
     // Check for user
     if (project.owner.toString() !== req.user.id) {
-      return res.status(401).json({ success: false, error: 'User not authorized' });
+      return next(new ErrorResponse('User not authorized', 401));
     }
 
     // Remove folder from project's folders array
@@ -218,27 +212,26 @@ exports.deleteFolderFromProject = async (req, res) => {
     // Delete the folder itself
     await Folder.findByIdAndDelete(req.params.folderId);
 
-    res.json({ success: true, message: 'Folder removed from project' });
+    res.status(200).json({ success: true, message: 'Folder removed from project' });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, error: 'Server error' });
+    next(err);
   }
 };
 
 // @desc    Delete pathway from project
 // @route   DELETE /api/projects/:projectId/pathways/:pathwayId
 // @access  Private
-exports.deletePathwayFromProject = async (req, res) => {
+exports.deletePathwayFromProject = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.projectId);
 
     if (!project) {
-      return res.status(404).json({ success: false, error: 'Project not found' });
+      return next(new ErrorResponse('Project not found', 404));
     }
 
     // Check for user
     if (project.owner.toString() !== req.user.id) {
-      return res.status(401).json({ success: false, error: 'User not authorized' });
+      return next(new ErrorResponse('User not authorized', 401));
     }
 
     // Remove pathway from project's pathways array
@@ -250,10 +243,9 @@ exports.deletePathwayFromProject = async (req, res) => {
     // Delete the pathway itself
     await Pathway.findByIdAndDelete(req.params.pathwayId);
 
-    res.json({ success: true, message: 'Pathway removed from project' });
+    res.status(200).json({ success: true, message: 'Pathway removed from project' });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, error: 'Server error' });
+    next(err);
   }
 };
 

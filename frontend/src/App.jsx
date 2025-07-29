@@ -1,7 +1,13 @@
+/**
+ * @file App.jsx
+ * @description The main application component that sets up routing and global layout.
+ * It uses React Router for navigation and Ant Design's Layout components for structure.
+ * AuthProvider wraps the entire application to provide authentication context.
+ */
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Header from './components/layout/Header';
-import Sidebar from './components/layout/Sidebar';
+import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
@@ -23,30 +29,27 @@ const App = () => {
   return (
     <AuthProvider>
       <Router>
-        <div className="flex flex-col min-h-screen bg-neutral-background">
-          <Header />
-          <div className="flex flex-1 flex-col md:flex-row">
-            <Sidebar />
-            <main className="flex-1 p-4 md:p-6 lg:p-8">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/workspaces" element={<WorkspaceList />} />
-                <Route path="/workspaces/new" element={<WorkspaceForm />} />
-                <Route path="/workspaces/:id" element={<WorkspaceDetail />} />
-                <Route path="/workspaces/:id/edit" element={<WorkspaceForm isEditMode={true} />} />
-                <Route path="/projects" element={<ProjectList />} />
-                <Route path="/projects/new" element={<ProjectForm />} />
-                <Route path="/projects/:id" element={<ProjectDetail />} />
-                <Route path="/projects/:id/edit" element={<ProjectForm isEditMode={true} />} />
-                <Route path="/pathways/:id" element={<PathwayDetail />} />
-                <Route path="/pathways/:id/edit" element={<PathwayEditor />} />
-                <Route path="/admin" element={<AdminPanel />} />
-                <Route path="/public" element={<PublicView />} />
-              </Routes>
-            </main>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+          <Navbar />
+          <div style={{ flex: 1, padding: '20px' }}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/workspaces" element={<WorkspaceList />} />
+              <Route path="/workspaces/new" element={<WorkspaceForm />} />
+              <Route path="/workspaces/:id" element={<WorkspaceDetail />} />
+              <Route path="/workspaces/:id/edit" element={<WorkspaceForm isEditMode={true} />} />
+              <Route path="/projects" element={<ProjectList />} />
+              <Route path="/projects/new" element={<ProjectForm />} />
+              <Route path="/projects/:id" element={<ProjectDetail />} />
+              <Route path="/projects/:id/edit" element={<ProjectForm isEditMode={true} />} />
+              <Route path="/pathways/:id" element={<PathwayDetail />} />
+              <Route path="/pathways/:id/edit" element={<PathwayEditor />} />
+              <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/public" element={<PublicView />} />
+            </Routes>
           </div>
           <Footer />
         </div>

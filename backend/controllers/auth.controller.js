@@ -1,18 +1,19 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const ErrorResponse = require('../utils/errorResponse');
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
-exports.register = async (req, res) => {
+exports.register = async (req, res, next) => {
   const { name, email, password } = req.body;
 
   try {
     let user = await User.findOne({ email });
 
     if (user) {
-      return res.status(400).json({ msg: 'User already exists' });
+      return next(new ErrorResponse('User already exists', 400));
     }
 
     user = new User({
@@ -37,33 +38,32 @@ exports.register = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: 3600 },
       (err, token) => {
-        if (err) throw err;
-        res.json({ token });
+        if (err) return next(new ErrorResponse('Token generation failed', 500));
+        res.status(201).json({ success: true, token });
       }
     );
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 };
 
 // @desc    Authenticate user & get token
 // @route   POST /api/auth/login
 // @access  Public
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
   const { email, password } = req.body;
 
   try {
     let user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({ msg: 'Invalid credentials' });
+      return next(new ErrorResponse('Invalid credentials', 400));
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(400).json({ msg: 'Invalid credentials' });
+      return next(new ErrorResponse('Invalid credentials', 400));
     }
 
     const payload = {
@@ -77,25 +77,23 @@ exports.login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: 3600 },
       (err, token) => {
-        if (err) throw err;
-        res.json({ token });
+        if (err) return next(new ErrorResponse('Token generation failed', 500));
+        res.status(200).json({ success: true, token });
       }
     );
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 };
 
 // @desc    Get logged in user
 // @route   GET /api/auth/me
 // @access  Private
-exports.getMe = async (req, res) => {
+exports.getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
-    res.json(user);
+    res.status(200).json({ success: true, data: user });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 };

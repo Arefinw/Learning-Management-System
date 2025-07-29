@@ -1,77 +1,125 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
+import Loading from '../components/common/Loading';
+import Error from '../components/common/Error';
+
+// Ant Design Components
+import { Layout, Row, Col, Card, Button, List, Typography, Space, Spin, Alert } from 'antd';
+import { EditOutlined, UserOutlined, TeamOutlined, SettingOutlined } from '@ant-design/icons';
+
+const { Content } = Layout;
+const { Title, Text } = Typography;
 
 const AdminPanel = () => {
   const [users, setUsers] = useState([]);
   const [workspaces, setWorkspaces] = useState([]);
 
   useEffect(() => {
-    // Fetch users
-    axios.get('/api/users')
-      .then(res => setUsers(res.data))
-      .catch(err => console.error(err));
-
-    // Fetch workspaces
-    axios.get('/api/workspaces')
-      .then(res => setWorkspaces(res.data))
-      .catch(err => console.error(err));
+    /**
+     * Fetches all users and workspaces for the admin panel.
+     * @async
+     * @function fetchData
+     * @returns {Promise<void>}
+     */
+    const fetchData = async () => {
+      try {
+        const [usersRes, workspacesRes] = await Promise.all([
+          api.get('/api/users'),
+          api.get('/api/workspaces'),
+        ]);
+        setUsers(usersRes.data.data);
+        setWorkspaces(workspacesRes.data.data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.response?.data?.message || err.message);
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen-content">
+        <Spin size="large" tip="Loading Admin Panel..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <Error message={error} />;
+  }
+
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Admin Panel</h1>
+    <Layout className="p-16 bg-transparent">
+      <Content>
+        <Title level={2} style={{ color: '#333333', marginBottom: '32px' }}>Admin Panel</Title>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">User Management</h2>
-        <div className="card">
-          <h3 className="text-xl font-medium mb-2">All Users</h3>
-          <ul>
-            {users.map(user => (
-              <li key={user._id} className="py-2 border-b border-neutral-border last:border-b-0 flex justify-between items-center">
-                <span>{user.name} ({user.email}) - {user.role}</span>
-                <button className="btn btn-secondary btn-sm">Edit</button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+        <section style={{ marginBottom: '32px' }}>
+          <Card title={<Title level={3} style={{ color: '#6A5ACD' }}>User Management</Title>}>
+            <List
+              itemLayout="horizontal"
+              dataSource={users}
+              renderItem={(user) => (
+                <List.Item
+                  actions={[
+                    <Button type="text" icon={<EditOutlined />} style={{ color: '#4b5563' }} />,
+                  ]}
+                  style={{ padding: '16px 0' }}
+                >
+                  <List.Item.Meta
+                    avatar={<UserOutlined style={{ color: '#6A5ACD', fontSize: '20px' }} />}
+                    title={<Text strong>{user.name}</Text>}
+                    description={<Text type="secondary">{user.email} - {user.role}</Text>}
+                  />
+                </List.Item>
+              )}
+            />
+          </Card>
+        </section>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Workspace Management</h2>
-        <div className="card">
-          <h3 className="text-xl font-medium mb-2">All Workspaces</h3>
-          <ul>
-            {workspaces.map(workspace => (
-              <li key={workspace._id} className="py-2 border-b border-neutral-border last:border-b-0 flex justify-between items-center">
-                <span>{workspace.name} ({workspace.description})</span>
-                <button className="btn btn-secondary btn-sm">Edit</button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+        <section style={{ marginBottom: '32px' }}>
+          <Card title={<Title level={3} style={{ color: '#6A5ACD' }}>Workspace Management</Title>}>
+            <List
+              itemLayout="horizontal"
+              dataSource={workspaces}
+              renderItem={(workspace) => (
+                <List.Item
+                  actions={[
+                    <Button type="text" icon={<EditOutlined />} style={{ color: '#4b5563' }} />,
+                  ]}
+                  style={{ padding: '16px 0' }}
+                >
+                  <List.Item.Meta
+                    avatar={<TeamOutlined style={{ color: '#6A5ACD', fontSize: '20px' }} />}
+                    title={<Text strong>{workspace.name}</Text>}
+                    description={<Text type="secondary">{workspace.description}</Text>}
+                  />
+                </List.Item>
+              )}
+            />
+          </Card>
+        </section>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Content Moderation</h2>
-        <div className="card">
-          <p>Content moderation tools will be available here.</p>
-        </div>
-      </section>
+        <section style={{ marginBottom: '32px' }}>
+          <Card title={<Title level={3} style={{ color: '#6A5ACD' }}>Content Moderation</Title>}>
+            <Text style={{ color: '#374151' }}>Content moderation tools will be available here.</Text>
+          </Card>
+        </section>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Analytics and Reporting</h2>
-        <div className="card">
-          <p>Analytics and reporting dashboards will be displayed here.</p>
-        </div>
-      </section>
+        <section style={{ marginBottom: '32px' }}>
+          <Card title={<Title level={3} style={{ color: '#6A5ACD' }}>Analytics and Reporting</Title>}>
+            <Text style={{ color: '#374151' }}>Analytics and reporting dashboards will be displayed here.</Text>
+          </Card>
+        </section>
 
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">System Settings</h2>
-        <div className="card">
-          <p>System-wide configurations and settings will be managed here.</p>
-        </div>
-      </section>
-    </div>
+        <section>
+          <Card title={<Title level={3} style={{ color: '#6A5ACD' }}>System Settings</Title>}>
+            <Text style={{ color: '#374151' }}>System-wide configurations and settings will be managed here.</Text>
+          </Card>
+        </section>
+      </Content>
+    </Layout>
   );
 };
 

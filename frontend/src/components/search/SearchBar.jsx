@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../services/api'; // Use the centralized API service
+import { message } from 'antd'; // Import Ant Design message component
 
 const SearchBar = () => {
   const [query, setQuery] = useState('');
@@ -12,10 +13,11 @@ const SearchBar = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.get(`/api/search?q=${query}`);
-      setResults(res.data);
+      const res = await api.get(`/api/search?q=${query}`);
+      setResults(res.data.data); // Access data property
     } catch (err) {
       console.error(err);
+      message.error(err.response?.data?.error || 'Failed to perform search.');
     }
   };
 

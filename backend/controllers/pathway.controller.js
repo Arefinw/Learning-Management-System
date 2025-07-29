@@ -1,22 +1,22 @@
 const Pathway = require('../models/Pathway');
+const ErrorResponse = require('../utils/errorResponse');
 
 // @desc    Get all pathways
 // @route   GET /api/pathways
 // @access  Private
-exports.getPathways = async (req, res) => {
+exports.getPathways = async (req, res, next) => {
   try {
     const pathways = await Pathway.find({ project: req.query.project });
-    res.json(pathways);
+    res.status(200).json({ success: true, data: pathways });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 };
 
 // @desc    Create a pathway
 // @route   POST /api/pathways
 // @access  Private
-exports.createPathway = async (req, res) => {
+exports.createPathway = async (req, res, next) => {
   const { title, description, project, folder } = req.body;
 
   try {
@@ -28,35 +28,33 @@ exports.createPathway = async (req, res) => {
     });
 
     const pathway = await newPathway.save();
-    res.json(pathway);
+    res.status(201).json({ success: true, data: pathway });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 };
 
 // @desc    Get single pathway
 // @route   GET /api/pathways/:id
 // @access  Private
-exports.getPathway = async (req, res) => {
+exports.getPathway = async (req, res, next) => {
   try {
     const pathway = await Pathway.findById(req.params.id);
 
     if (!pathway) {
-      return res.status(404).json({ msg: 'Pathway not found' });
+      return next(new ErrorResponse('Pathway not found', 404));
     }
 
-    res.json(pathway);
+    res.status(200).json({ success: true, data: pathway });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 };
 
 // @desc    Update pathway
 // @route   PUT /api/pathways/:id
 // @access  Private
-exports.updatePathway = async (req, res) => {
+exports.updatePathway = async (req, res, next) => {
   const { title, description } = req.body;
 
   // Build pathway object
@@ -68,51 +66,49 @@ exports.updatePathway = async (req, res) => {
     let pathway = await Pathway.findById(req.params.id);
 
     if (!pathway) {
-      return res.status(404).json({ msg: 'Pathway not found' });
+      return next(new ErrorResponse('Pathway not found', 404));
     }
 
     pathway = await Pathway.findByIdAndUpdate(
       req.params.id,
       { $set: pathwayFields },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
-    res.json(pathway);
+    res.status(200).json({ success: true, data: pathway });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 };
 
 // @desc    Delete pathway
 // @route   DELETE /api/pathways/:id
 // @access  Private
-exports.deletePathway = async (req, res) => {
+exports.deletePathway = async (req, res, next) => {
   try {
     const pathway = await Pathway.findById(req.params.id);
 
     if (!pathway) {
-      return res.status(404).json({ msg: 'Pathway not found' });
+      return next(new ErrorResponse('Pathway not found', 404));
     }
 
-    await pathway.remove();
+    await pathway.deleteOne();
 
-    res.json({ msg: 'Pathway removed' });
+    res.status(200).json({ success: true, message: 'Pathway removed' });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 };
 
 // @desc    Add item to pathway
 // @route   POST /api/pathways/:id/items
 // @access  Private
-exports.addItem = async (req, res) => {
+exports.addItem = async (req, res, next) => {
   try {
     const pathway = await Pathway.findById(req.params.id);
 
     if (!pathway) {
-      return res.status(404).json({ msg: 'Pathway not found' });
+      return next(new ErrorResponse('Pathway not found', 404));
     }
 
     const { type, content } = req.body;
@@ -126,9 +122,8 @@ exports.addItem = async (req, res) => {
 
     await pathway.save();
 
-    res.json(pathway.items);
+    res.status(200).json({ success: true, data: pathway.items });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 };

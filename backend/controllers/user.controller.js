@@ -1,38 +1,37 @@
 const User = require('../models/User');
+const ErrorResponse = require('../utils/errorResponse');
 
 // @desc    Get all users
 // @route   GET /api/users
 // @access  Private/Admin
-exports.getUsers = async (req, res) => {
+exports.getUsers = async (req, res, next) => {
   try {
     const users = await User.find();
-    res.json(users);
+    res.status(200).json({ success: true, data: users });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 };
 
 // @desc    Get user by ID
 // @route   GET /api/users/:id
 // @access  Private
-exports.getUser = async (req, res) => {
+exports.getUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
     if (!user) {
-      return res.status(404).json({ msg: 'User not found' });
+      return next(new ErrorResponse('User not found', 404));
     }
-    res.json(user);
+    res.status(200).json({ success: true, data: user });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 };
 
 // @desc    Update user
 // @route   PUT /api/users/:id
 // @access  Private
-exports.updateUser = async (req, res) => {
+exports.updateUser = async (req, res, next) => {
   const { name, email } = req.body;
 
   // Build user object
@@ -44,23 +43,22 @@ exports.updateUser = async (req, res) => {
     let user = await User.findById(req.params.id);
 
     if (!user) {
-      return res.status(404).json({ msg: 'User not found' });
+      return next(new ErrorResponse('User not found', 404));
     }
 
     // Make sure user owns the profile
     if (user.id.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'Not authorized' });
+      return next(new ErrorResponse('Not authorized to update this user', 401));
     }
 
     user = await User.findByIdAndUpdate(
       req.params.id,
       { $set: userFields },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
-    res.json(user);
+    res.status(200).json({ success: true, data: user });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 };

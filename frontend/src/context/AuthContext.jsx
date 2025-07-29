@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import api from '../services/api';
+import { message } from 'antd'; // Import Ant Design message component
 
 export const AuthContext = createContext();
 
@@ -16,11 +17,13 @@ export const AuthProvider = ({ children }) => {
         .get('/api/auth/me')
         .then((res) => {
           setIsAuthenticated(true);
-          setUser(res.data.data);
+          setUser(res.data.data); // Access data property
+          console.log('User authenticated', res.data.data);
           setLoading(false);
         })
         .catch((err) => {
           console.error(err);
+          message.error('Failed to authenticate user. Please log in again.');
           setIsAuthenticated(false);
           setUser(null);
           setLoading(false);
@@ -42,12 +45,18 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.post('/api/auth/login', body, config);
       localStorage.setItem('token', res.data.token);
+      console.log('Token set', res.data.token);
       api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
       const userRes = await api.get('/api/auth/me');
+      console.log('User authenticated', userRes.data.data);
       setIsAuthenticated(true);
-      setUser(userRes.data.data);
+      setUser(userRes.data.data); // Access data property
+      message.success('Login successful!');
+      return true;
     } catch (err) {
       console.error(err.response.data);
+      message.error(err.response?.data?.error || 'Login failed. Please check your credentials.');
+      return false;
     }
   };
 
@@ -66,9 +75,13 @@ export const AuthProvider = ({ children }) => {
       api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
       const userRes = await api.get('/api/auth/me');
       setIsAuthenticated(true);
-      setUser(userRes.data.data);
+      setUser(userRes.data.data); // Access data property
+      message.success('Registration successful!');
+      return true;
     } catch (err) {
       console.error(err.response.data);
+      message.error(err.response?.data?.error || 'Registration failed. Please try again.');
+      return false;
     }
   };
 
@@ -77,6 +90,7 @@ export const AuthProvider = ({ children }) => {
     delete api.defaults.headers.common['Authorization'];
     setIsAuthenticated(false);
     setUser(null);
+    message.info('Logged out successfully.');
   };
 
   return (

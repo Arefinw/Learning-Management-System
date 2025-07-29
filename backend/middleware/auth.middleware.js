@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const ErrorResponse = require('../utils/errorResponse');
 
 // Protect routes
 exports.protect = async (req, res, next) => {
@@ -14,7 +15,7 @@ exports.protect = async (req, res, next) => {
 
   // Make sure token exists
   if (!token) {
-    return res.status(401).json({ msg: 'No token, authorization denied' });
+    return next(new ErrorResponse('Not authorized to access this route', 401));
   }
 
   try {
@@ -25,6 +26,11 @@ exports.protect = async (req, res, next) => {
 
     next();
   } catch (err) {
-    res.status(401).json({ msg: 'Token is not valid' });
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return next(new ErrorResponse('Not authorized to access this route', 401));
+    } else {
+      // This could be a database error or other unexpected error
+      return next(new ErrorResponse(`Authentication failed: ${err.message}`, 500));
+    }
   }
 };

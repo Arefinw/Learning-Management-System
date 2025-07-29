@@ -1,44 +1,86 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
+import Loading from '../common/Loading';
+import Error from '../common/Error';
+
+
+// Ant Design Components
+import { Layout, Card, Typography, Button, List, Space } from 'antd';
+import { EditOutlined, BookOutlined } from '@ant-design/icons';
+
+const { Content } = Layout;
+const { Title, Text } = Typography;
 
 const PathwayDetail = () => {
   const { user } = useContext(AuthContext);
   const { id } = useParams();
   const [pathway, setPathway] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (user) {
-      axios
-        .get(`/api/pathways/${id}`)
-        .then((res) => {
-          setPathway(res.data);
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    }
-  }, [user, id]);
+    const fetchPathwayDetails = async () => {
+      try {
+        const response = await api.get(`/api/pathways/${id}`);
+        setPathway(response.data.data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.response?.data?.message || err.message);
+        setLoading(false);
+      }
+    };
 
-  if (!pathway) {
+    fetchPathwayDetails();
+  }, [id]);
+
+  if (loading) {
     return <Loading />;
   }
 
+  if (error) {
+    return <Error message={error} />;
+  }
+
+  if (!pathway) {
+    return <Error message="Pathway not found." />;
+  }
+
   return (
-    <div className="card">
-      <h2 className="text-2xl font-bold mb-4">{pathway.title}</h2>
-      <p className="mb-4">{pathway.description}</p>
-      <h3 className="text-xl font-semibold mb-3">Items</h3>
-      <ul>
-        {pathway.items.map((item) => (
-          <li key={item._id} className="py-1 border-b border-neutral-border last:border-b-0">
-            {item.type}: {item.content}
-          </li>
-        ))}
-      </ul>
-      <Link to={`/pathways/${pathway._id}/edit`} className="btn btn-secondary mt-4">Edit Pathway</Link>
-    </div>
+    <Layout className="p-16 bg-transparent">
+      <Content>
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <Card>
+            <Title level={2} style={{ color: '#333333', marginBottom: '16px' }}>{pathway.title}</Title>
+            <Text style={{ color: '#374151', marginBottom: '16px', display: 'block' }}>{pathway.description}</Text>
+            <Link to={`/pathways/${pathway._id}/edit`}>
+              <Button type="primary" icon={<EditOutlined />}>Edit Pathway</Button>
+            </Link>
+          </Card>
+
+          <Card title={<Title level={3} style={{ color: '#6A5ACD' }}>Pathway Items</Title>}>
+            {pathway.items && pathway.items.length > 0 ? (
+              <List
+                itemLayout="horizontal"
+                dataSource={pathway.items}
+                renderItem={(item) => (
+                  <List.Item style={{ padding: '16px 0' }}>
+                    <List.Item.Meta
+                      avatar={<BookOutlined style={{ color: '#6A5ACD', fontSize: '20px' }} />}
+                      title={<Text strong>{item.type}: {item.content}</Text>}
+                      description={<Text type="secondary">Completed: {item.completed ? 'Yes' : 'No'}</Text>}
+                    />
+                  </List.Item>
+                )}
+              />
+            ) : (
+              <Text type="secondary">No items in this pathway yet.</Text>
+            )}
+          </Card>
+        </Space>
+      </Content>
+    </Layout>
   );
 };
 

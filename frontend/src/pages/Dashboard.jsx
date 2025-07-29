@@ -1,16 +1,23 @@
-/**
- * @file Dashboard.jsx
- * @description This file implements the Dashboard page component.
- * It displays user-specific information, statistics, recent activities, and quick action buttons.
- * It connects to backend APIs to fetch user data and other relevant statistics.
- */
-
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
-import Loading from '../components/common/Loading';
-import Error from '../components/common/Error';
+
+// Ant Design Components
+import { Row, Col, Card, Statistic, Button, List, Avatar, Typography, Space, Spin, Alert, Divider } from 'antd';
+import {
+  UserOutlined,
+  ProjectOutlined,
+  CheckCircleOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
+  ClockCircleOutlined,
+} from '@ant-design/icons';
 import { Link } from 'react-router-dom';
+
+
+const { Title, Text } = Typography;
 
 /**
  * Dashboard Component
@@ -31,15 +38,8 @@ const Dashboard = () => {
      */
     const fetchDashboardData = async () => {
       try {
-        // Fetch user profile (if not already available from AuthContext or if more detailed profile is needed)
-        // For now, we'll rely on the user from AuthContext.
-        // In a real app, you might have a /api/users/me endpoint for detailed profile.
-
-        // Fetch some statistics or recent activities.
-        // Assuming backend has an endpoint like /api/dashboard/stats or similar.
-        // If not, we'll use mock data for now.
-        const response = await api.get('/api/dashboard/stats'); // This endpoint might not exist yet.
-        setDashboardData(response.data);
+        const response = await api.get('/api/dashboard/stats');
+        setDashboardData(response.data.data);
         setLoading(false);
       } catch (err) {
         setError(err.response?.data?.message || err.message);
@@ -51,106 +51,132 @@ const Dashboard = () => {
   }, []);
 
   if (loading) {
-    return <Loading />;
+    return (
+      <div className="flex justify-center items-center min-h-screen-content">
+        <Spin size="large" tip="Loading Dashboard..." />
+      </div>
+    );
   }
 
   if (error) {
-    return <Error message={error} />;
+    return (
+      <div className="p-4">
+        <Alert
+          message="Error"
+          description={error}
+          type="error"
+          showIcon
+          closable
+        />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
+    <div className="p-16 bg-transparent">
+        <Title level={2} style={{ marginBottom: '32px' }}>Dashboard</Title>
 
-      {/* User Profile Section */}
-      <section className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Welcome, {user?.name || 'User'}!</h2>
-        <div className="flex items-center space-x-4">
-          <img
-            src="https://via.placeholder.com/100" // Placeholder for user avatar
-            alt="User Avatar"
-            className="w-24 h-24 rounded-full object-cover border-4 border-blue-300"
-          />
-          <div>
-            <p className="text-lg text-gray-600">Email: {user?.email}</p>
-            <p className="text-lg text-gray-600">Role: {user?.role}</p>
-            {/* Add more user details as needed */}
+        {/* User Profile Section */}
+        <Card
+          style={{ marginBottom: '32px' }}
+          title={<Title level={3} style={{ color: '#6A5ACD' }}>Welcome, {user?.name || 'User'}!</Title>}
+        >
+          <Row align="middle" gutter={[32, 32]}>
+            <Col>
+              <Avatar size={100} icon={<UserOutlined />} src={user?.avatar || "https://via.placeholder.com/100"} />
+            </Col>
+            <Col>
+              <Text strong style={{ color: '#6A5ACD' }}>Email:</Text> <Text>{user?.email}</Text><br />
+              <Text strong style={{ color: '#6A5ACD' }}>Role:</Text> <Text>{user?.role}</Text>
+            </Col>
+          </Row>
+          <Divider style={{ margin: '24px 0' }} />
+          <div style={{ marginTop: '24px' }}>
+            <Link to="/profile">
+              <Button type="link" style={{ color: '#6A5ACD' }}>View Profile</Button>
+            </Link>
           </div>
-        </div>
-        <div className="mt-4">
-          <Link
-            to="/profile" // Assuming a profile page exists
-            className="text-blue-600 hover:underline"
-          >
-            View Profile
-          </Link>
-        </div>
-      </section>
+        </Card>
 
-      {/* Statistics/Cards Section */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white shadow-md rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Total Workspaces</h3>
-          <p className="text-4xl font-bold text-blue-600">{dashboardData?.totalWorkspaces || 0}</p>
-        </div>
-        <div className="bg-white shadow-md rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Total Projects</h3>
-          <p className="text-4xl font-bold text-green-600">{dashboardData?.totalProjects || 0}</p>
-        </div>
-        <div className="bg-white shadow-md rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Completed Pathways</h3>
-          <p className="text-4xl font-bold text-purple-600">{dashboardData?.completedPathways || 0}</p>
-        </div>
-      </section>
+        {/* Statistics/Cards Section */}
+        <Row gutter={[32, 32]} style={{ marginBottom: '32px' }}>
+          <Col xs={24} sm={12} lg={8}>
+            <Card>
+              <Statistic
+                title="Total Workspaces"
+                value={dashboardData?.totalWorkspaces || 0}
+                prefix={<ProjectOutlined style={{ color: '#6A5ACD' }} />}
+                valueStyle={{ color: '#6A5ACD' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Card>
+              <Statistic
+                title="Total Projects"
+                value={dashboardData?.totalProjects || 0}
+                prefix={<ProjectOutlined style={{ color: '#52c41a' }} />}
+                valueStyle={{ color: '#52c41a' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Card>
+              <Statistic
+                title="Completed Pathways"
+                value={dashboardData?.completedPathways || 0}
+                prefix={<CheckCircleOutlined style={{ color: '#f093fb' }} />}
+                valueStyle={{ color: '#f093fb' }}
+              />
+            </Card>
+          </Col>
+        </Row>
 
-      {/* Quick Action Buttons */}
-      <section className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Quick Actions</h2>
-        <div className="flex flex-wrap gap-4">
-          <Link
-            to="/workspaces/new"
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300"
-          >
-            Create New Workspace
-          </Link>
-          <Link
-            to="/projects/new"
-            className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300"
-          >
-            Create New Project
-          </Link>
-          <Link
-            to="/pathways/new"
-            className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300"
-          >
-            Create New Pathway
-          </Link>
-          <Link
-            to="/search"
-            className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300"
-          >
-            Search Content
-          </Link>
-        </div>
-      </section>
+        {/* Quick Action Buttons */}
+        <Card title={<Title level={3} style={{ color: '#6A5ACD' }}>Quick Actions</Title>} style={{ marginBottom: '32px' }}>
+          <Space wrap size="large" style={{ gap: '16px' }}>
+            <Link to="/workspaces/new">
+              <Button type="primary" size="large" icon={<PlusOutlined />}>Create New Workspace</Button>
+            </Link>
+            <Link to="/projects/new">
+              <Button type="primary" size="large" icon={<PlusOutlined />} style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}>
+                Create New Project
+              </Button>
+            </Link>
+            <Link to="/pathways/new">
+              <Button type="primary" size="large" icon={<PlusOutlined />} style={{ backgroundColor: '#f093fb', borderColor: '#f093fb' }}>
+                Create New Pathway
+              </Button>
+            </Link>
+            <Link to="/search">
+              <Button size="large" icon={<SearchOutlined />}>
+                Search Content
+              </Button>
+            </Link>
+          </Space>
+        </Card>
 
-      {/* Recent Activity Feed */}
-      <section className="bg-white shadow-md rounded-lg p-6">
-        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Recent Activity</h2>
-        {dashboardData?.recentActivities && dashboardData.recentActivities.length > 0 ? (
-          <ul className="space-y-3">
-            {dashboardData.recentActivities.map((activity, index) => (
-              <li key={index} className="border-b pb-3 last:border-b-0">
-                <p className="text-gray-800 font-medium">{activity.description}</p>
-                <p className="text-sm text-gray-500">{new Date(activity.timestamp).toLocaleString()}</p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-500">No recent activity to display.</p>
-        )}
-      </section>
-    </div>
+        {/* Recent Activity Feed */}
+        <Card title={<Title level={3} style={{ color: '#6A5ACD' }}>Recent Activity</Title>}>
+          {dashboardData?.recentActivities && dashboardData.recentActivities.length > 0 ? (
+            <List
+              itemLayout="horizontal"
+              dataSource={dashboardData.recentActivities}
+              renderItem={(activity) => (
+                <List.Item style={{ padding: '16px 0' }}>
+                  <List.Item.Meta
+                    avatar={<Avatar icon={<ClockCircleOutlined />} style={{ backgroundColor: '#e5e7eb', color: '#4b5563' }} />}
+                    title={<Text strong>{activity.description}</Text>}
+                    description={<Text type="secondary">{new Date(activity.timestamp).toLocaleString()}</Text>}
+                  />
+                </List.Item>
+              )}
+            />
+          ) : (
+            <Text type="secondary">No recent activity to display.</Text>
+          )}
+        </Card>
+      </div>
   );
 };
 

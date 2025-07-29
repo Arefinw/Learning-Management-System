@@ -1,11 +1,17 @@
 import React from 'react';
+import { Layout, Typography } from 'antd';
+
+const { Content } = Layout;
+const { Title, Text } = Typography;
 
 const Home = () => {
   return (
-    <div className="text-center py-16">
-      <h1 className="text-5xl font-extrabold text-primary mb-4">Welcome to the Learning Management System</h1>
-      <p className="text-xl text-neutral-text-light">Your journey to knowledge begins here.</p>
-    </div>
+    <Layout className="min-h-screen flex items-center justify-center gradient-background">
+      <Content className="text-center p-64">
+        <Title style={{ color: 'white', fontSize: '64px', fontWeight: '800', marginBottom: '16px', lineHeight: '1.2' }}>Welcome to the Learning Management System</Title>
+        <Text style={{ color: 'white', fontSize: '24px' }}>Your journey to knowledge begins here.</Text>
+      </Content>
+    </Layout>
   );
 };
 

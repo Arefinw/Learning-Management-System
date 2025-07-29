@@ -1,14 +1,20 @@
 /**
  * @file ProjectForm.jsx
- * @description This file implements the ProjectForm component, used for creating and editing projects.
+ * @description This file implements the ProjectForm component, used for creating and editing projects using Ant Design.
  * It handles form submission, validation, and interaction with the backend API.
  */
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import api from '../../services/api';
-import Loading from '../common/Loading';
-import Error from '../common/Error';
+
+
+// Ant Design Components
+import { Layout, Form, Input, Select, Button, Card, Typography, message } from 'antd';
+
+const { Content } = Layout;
+const { Title } = Typography;
+const { Option } = Select;
 
 /**
  * ProjectForm Component
@@ -23,15 +29,9 @@ const ProjectForm = ({ isEditMode = false }) => {
   const queryParams = new URLSearchParams(location.search);
   const workspaceIdFromUrl = queryParams.get('workspaceId');
 
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    visibility: 'private', // Default visibility
-    workspace: workspaceIdFromUrl || '',
-  });
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(isEditMode);
   const [error, setError] = useState(null);
-  const [formErrors, setFormErrors] = useState({});
   const [workspaces, setWorkspaces] = useState([]); // To populate workspace dropdown
 
   useEffect(() => {
@@ -49,7 +49,10 @@ const ProjectForm = ({ isEditMode = false }) => {
 
         if (isEditMode && id) {
           const projectResponse = await api.get(`/api/projects/${id}`);
-          setFormData(projectResponse.data.data);
+          const projectData = projectResponse.data.data;
+          form.setFieldsValue({ ...projectData, workspace: projectData.workspace ? projectData.workspace._id : undefined });
+        } else if (workspaceIdFromUrl) {
+          form.setFieldsValue({ workspace: workspaceIdFromUrl });
         }
         setLoading(false);
       } catch (err) {
@@ -58,65 +61,31 @@ const ProjectForm = ({ isEditMode = false }) => {
       }
     };
     fetchData();
-  }, [isEditMode, id]);
-
-  /**
-   * Handles input changes in the form.
-   * @function handleChange
-   * @param {object} e - The event object.
-   * @returns {void}
-   */
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    setFormErrors({ ...formErrors, [name]: null }); // Clear error on change
-  };
-
-  /**
-   * Validates the form data.
-   * @function validateForm
-   * @returns {boolean} True if the form is valid, false otherwise.
-   */
-  const validateForm = () => {
-    const errors = {};
-    if (!formData.name.trim()) {
-      errors.name = 'Project name is required.';
-    }
-    if (!formData.description.trim()) {
-      errors.description = 'Description is required.';
-    }
-    if (!formData.workspace) {
-      errors.workspace = 'Workspace is required.';
-    }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+  }, [isEditMode, id, form, workspaceIdFromUrl]);
 
   /**
    * Handles form submission.
    * @async
-   * @function handleSubmit
-   * @param {object} e - The event object.
+   * @function onFinish
+   * @param {object} values - The form values.
    * @returns {Promise<void>}
    */
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) {
-      return;
-    }
-
+  const onFinish = async (values) => {
     setLoading(true);
     setError(null);
     try {
       if (isEditMode) {
-        await api.put(`/api/projects/${id}`, formData);
+        await api.put(`/api/projects/${id}`, values);
+        message.success('Project updated successfully!');
         navigate(`/projects/${id}`);
       } else {
-        const response = await api.post('/api/projects', formData);
+        const response = await api.post('/api/projects', values);
+        message.success('Project created successfully!');
         navigate(`/projects/${response.data.data._id}`);
       }
     } catch (err) {
       setError(err.response?.data?.message || err.message);
+      message.error(err.response?.data?.message || err.message);
     } finally {
       setLoading(false);
     }
@@ -131,87 +100,68 @@ const ProjectForm = ({ isEditMode = false }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">
-        {isEditMode ? 'Edit Project' : 'Create New Project'}
-      </h1>
-      <div className="bg-white shadow-md rounded-lg p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Project Name</label>
-            <input
-              type="text"
-              id="name"
+    <Layout className="p-16 bg-transparent">
+      <Content>
+        <Title level={2} className="text-neutral-800 mb-32">{isEditMode ? 'Edit Project' : 'Create New Project'}</Title>
+        <Card bordered={false}>
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={onFinish}
+            initialValues={{ visibility: 'private' }} // Set default for new project
+            className="space-y-4"
+          >
+            <Form.Item
               name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className={`mt-1 block w-full border ${formErrors.name ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-              required
-            />
-            {formErrors.name && <p className="mt-1 text-sm text-red-500">{formErrors.name}</p>}
-          </div>
+              label={<span className="text-neutral-700">Project Name</span>}
+              rules={[{ required: true, message: 'Please input the project name!' }]}
+            >
+              <Input size="large" />
+            </Form.Item>
 
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-            <textarea
-              id="description"
+            <Form.Item
               name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows="4"
-              className={`mt-1 block w-full border ${formErrors.description ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-              required
-            ></textarea>
-            {formErrors.description && <p className="mt-1 text-sm text-red-500">{formErrors.description}</p>}
-          </div>
+              label={<span className="text-neutral-700">Description</span>}
+              rules={[{ required: true, message: 'Please input the description!' }]}
+            >
+              <Input.TextArea rows={4} size="large" />
+            </Form.Item>
 
-          <div>
-            <label htmlFor="workspace" className="block text-sm font-medium text-gray-700">Workspace</label>
-            <select
-              id="workspace"
+            <Form.Item
               name="workspace"
-              value={formData.workspace}
-              onChange={handleChange}
-              className={`mt-1 block w-full border ${formErrors.workspace ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-              required
+              label={<span className="text-neutral-700">Workspace</span>}
+              rules={[{ required: true, message: 'Please select a workspace!' }]}
             >
-              <option value="">Select a Workspace</option>
-              {workspaces.map((ws) => (
-                <option key={ws._id} value={ws._id}>
-                  {ws.name}
-                </option>
-              ))}
-            </select>
-            {formErrors.workspace && <p className="mt-1 text-sm text-red-500">{formErrors.workspace}</p>}
-          </div>
+              <Select placeholder="Select a Workspace" size="large">
+                {workspaces.map((ws) => (
+                  <Option key={ws._id} value={ws._id}>
+                    {ws.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
 
-          <div>
-            <label htmlFor="visibility" className="block text-sm font-medium text-gray-700">Visibility</label>
-            <select
-              id="visibility"
+            <Form.Item
               name="visibility"
-              value={formData.visibility}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              label={<span className="text-neutral-700">Visibility</span>}
+              rules={[{ required: true, message: 'Please select visibility!' }]}
             >
-              <option value="private">Private</option>
-              <option value="public">Public</option>
-              <option value="workspace">Workspace Members Only</option>
-            </select>
-          </div>
+              <Select size="large">
+                <Option value="private">Private</Option>
+                <Option value="public">Public</Option>
+                <Option value="workspace">Workspace Members Only</Option>
+              </Select>
+            </Form.Item>
 
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300"
-              disabled={loading}
-            >
-              {loading ? 'Saving...' : (isEditMode ? 'Update Project' : 'Create Project')}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+            <Form.Item className="mb-0">
+              <Button type="primary" htmlType="submit" loading={loading} size="large">
+                {loading ? 'Saving...' : (isEditMode ? 'Update Project' : 'Create Project')}
+              </Button>
+            </Form.Item>
+          </Form>
+        </Card>
+      </Content>
+    </Layout>
   );
 };
 

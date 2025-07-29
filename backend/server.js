@@ -9,25 +9,37 @@ dotenv.config();
 const app = express();
 
 // Connect to database
-connectDB();
+const startServer = async () => {
+  try {
+    await connectDB();
 
-// Init middleware
-app.use(cors());
-app.use(express.json({ extended: false }));
+    // Init middleware
+    app.use(cors());
+    app.use(express.json({ extended: false }));
 
-// Define Routes
-app.use('/api/auth', require('./routes/auth.routes'));
-app.use('/api/users', require('./routes/user.routes'));
-app.use('/api/workspaces', require('./routes/workspace.routes'));
-app.use('/api/projects', require('./routes/project.routes'));
-app.use('/api/pathways', require('./routes/pathway.routes'));
-app.use('/api/search', require('./routes/search.routes'));
-app.use('/api/dashboard', require('./routes/dashboard.routes'));
+    // Define Routes
+    app.use('/api/auth', require('./routes/auth.routes'));
+    app.use('/api/users', require('./routes/user.routes'));
+    app.use('/api/workspaces', require('./routes/workspace.routes'));
+    app.use('/api/projects', require('./routes/project.routes'));
+    app.use('/api/pathways', require('./routes/pathway.routes'));
+    app.use('/api/search', require('./routes/search.routes'));
+    app.use('/api/dashboard', require('./routes/dashboard.routes'));
 
-const errorHandler = require('./middleware/error.middleware');
+    const errorHandler = require('./middleware/error.middleware');
+    app.use(errorHandler);
 
-app.use(errorHandler);
+    const PORT = process.env.PORT || 5000;
 
-const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`Server started on port ${PORT}`))
+      .on('error', (err) => {
+        console.error('Server startup error:', err);
+        process.exit(1);
+      });
+  } catch (err) {
+    console.error('Failed to connect to the database:', err);
+    process.exit(1);
+  }
+};
 
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+startServer();

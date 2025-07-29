@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { message } from 'antd'; // Import Ant Design message component
 
 const api = axios.create({
   baseURL: '',
@@ -26,8 +27,7 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response.status === 401) {
-      // Handle unauthorized errors, e.g., redirect to login
-      console.log('Unauthorized, logging out...');
+      message.error('Session expired or unauthorized. Please log in again.');
       localStorage.removeItem('token');
       window.location.href = '/login';
     }

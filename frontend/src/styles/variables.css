@@ -1,11 +1,85 @@
+/**
+ * @file variables.css
+ * @description Defines CSS variables for the application's color palette, typography, spacing, and other design tokens.
+ * This file centralizes design system values for consistent styling across the application.
+ */
+
 :root {
-  --color-primary: #4F46E5;
-  --color-secondary: #10B981;
-  --color-neutral-background: #F9FAFB;
-  --color-neutral-text: #1F2937;
-  --color-neutral-text-light: #6B7280;
-  --color-neutral-border: #D1D5DB;
-  --color-success: #059669;
-  --color-warning: #F59E0B;
-  --color-error: #DC2626;
+  /* Color Palette */
+  /* Primary Brand Color (Blue) */
+  --color-primary-50: #e0f2fe;
+  --color-primary-100: #bae6fd;
+  --color-primary-200: #7dd3fc;
+  --color-primary-300: #38bdf8;
+  --color-primary-400: #0ea5e9;
+  --color-primary-500: #0284c7; /* Main Primary */
+  --color-primary-600: #0369a1;
+  --color-primary-700: #075985;
+  --color-primary-800: #0c4a6e;
+  --color-primary-900: #082f49;
+  --color-primary: var(--color-primary-500);
+
+  /* Secondary Accent Color (Green) */
+  --color-secondary-50: #ecfdf5;
+  --color-secondary-100: #d1fae5;
+  --color-secondary-200: #a7f3d0;
+  --color-secondary-300: #6ee7b7;
+  --color-secondary-400: #34d399;
+  --color-secondary-500: #10b981; /* Main Secondary */
+  --color-secondary-600: #059669;
+  --color-secondary-700: #047857;
+  --color-secondary-800: #065f46;
+  --color-secondary-900: #064e3b;
+  --color-secondary: var(--color-secondary-500);
+
+  /* Neutral Colors (Grays) */
+  --color-neutral-50: #f9fafb; /* Very light gray, for backgrounds */
+  --color-neutral-100: #f3f4f6;
+  --color-neutral-200: #e5e7eb;
+  --color-neutral-300: #d1d5db;
+  --color-neutral-400: #9ca3af;
+  --color-neutral-500: #6b7280;
+  --color-neutral-600: #4b5563;
+  --color-neutral-700: #374151;
+  --color-neutral-800: #1f2937;
+  --color-neutral-900: #111827; /* Darkest gray, for primary text */
+
+  /* Semantic Colors (Status) */
+  --color-success: #10b981; /* Green */
+  --color-warning: #f59e0b; /* Orange */
+  --color-error: #ef4444; /* Red */
+  --color-info: #3b82f6; /* Blue */
+
+  /* Text Colors */
+  --color-text-primary: var(--color-neutral-900);
+  --color-text-secondary: var(--color-neutral-700);
+  --color-text-muted: var(--color-neutral-500);
+  --color-text-light: var(--color-neutral-50);
+
+  /* Background Colors */
+  --color-background: var(--color-neutral-50);
+  --color-card-background: #ffffff;
+
+  /* Border Colors */
+  --color-border: var(--color-neutral-200);
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Border Radius */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+
+  /* Box Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+  /* Transitions */
+  --transition-ease-in-out: all 0.3s ease-in-out;
 }
