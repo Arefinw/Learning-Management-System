@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
         .then((res) => {
           setIsAuthenticated(true);
           setUser(res.data.data); // Access data property
-          console.log('AuthContext: User authenticated successfully', res.data.data);
+          // console.log('AuthContext: User authenticated successfully', res.data.data);
           setLoading(false);
         })
         .catch((err) => {

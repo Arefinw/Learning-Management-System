@@ -76,14 +76,18 @@ exports.getProject = async (req, res, next) => {
     }
 
     // Check for user authorization based on visibility
-    if (project.visibility === 'private' && project.owner.toString() !== req.user.id) {
-      return next(new ErrorResponse('User not authorized', 401));
-    }
-    // For 'workspace' visibility, check if user is a member of the associated workspace
-    if (project.visibility === 'workspace' && project.workspace) {
-      const workspace = await Workspace.findById(project.workspace);
-      if (!workspace || !workspace.members.some(member => member.user.toString() === req.user.id)) {
-        return next(new ErrorResponse('User not authorized to view this project', 401));
+    if (project.owner._id.toString() !== req.user.id) {
+      if (project.visibility === 'private' || project.visibility === 'workspace') {
+        if (project.workspace) {
+          const workspace = await Workspace.findById(project.workspace);
+          const isMember = workspace.members.some(member => member.user.toString() === req.user.id);
+          if (!isMember) {
+            return next(new ErrorResponse('User not authorized to view this project', 401));
+          }
+        } else {
+          // No workspace, so only owner can access
+          return next(new ErrorResponse('User not authorized to view this project', 401));
+        }
       }
     }
 

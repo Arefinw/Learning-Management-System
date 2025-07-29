@@ -8,6 +8,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../services/api';
+import Loading from '../common/Loading';
+import Error from '../common/Error';
 
 
 // Ant Design Components
