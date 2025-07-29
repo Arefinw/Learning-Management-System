@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
       console.log('AuthContext: No token found in localStorage');
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, []);
 
   const login = async (email, password) => {
     console.log('AuthContext: Attempting login for', email);
