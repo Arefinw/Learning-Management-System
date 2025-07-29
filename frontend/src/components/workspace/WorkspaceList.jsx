@@ -31,6 +31,7 @@ const WorkspaceList = () => {
     const fetchWorkspaces = async () => {
       try {
         const response = await api.get('/api/workspaces');
+        console.log("data fetched", response.data.data);
         setWorkspaces(response.data.data);
         setLoading(false);
       } catch (err) {

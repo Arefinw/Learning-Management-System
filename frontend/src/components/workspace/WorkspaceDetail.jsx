@@ -1,6 +1,6 @@
 /**
  * @file WorkspaceDetail.jsx
- * @description This file implements the WorkspaceDetail component, which displays the details of a single workspace using Ant Design.
+ * @description This file implements the WorkspaceDetail component, which displays the details of a single workspace using basic HTML.
  * It allows users to view workspace information, manage members, and view associated projects.
  */
 
@@ -8,15 +8,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../services/api';
-
-
-// Ant Design Components
-import { Layout, Row, Col, Card, Button, List, Modal, Typography, Space, Form, Input, Select } from 'antd';
-import { EditOutlined, UserAddOutlined, ProjectOutlined } from '@ant-design/icons';
-
-const { Content } = Layout;
-const { Title, Text } = Typography;
-const { Option } = Select;
+import Loading from '../common/Loading';
+import Error from '../common/Error';
 
 /**
  * WorkspaceDetail Component
@@ -29,7 +22,8 @@ const WorkspaceDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
-  const [addMemberForm] = Form.useForm();
+  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newMemberRole, setNewMemberRole] = useState('member');
 
   useEffect(() => {
     /**
@@ -39,11 +33,23 @@ const WorkspaceDetail = () => {
      * @returns {Promise<void>}
      */
     const fetchWorkspaceDetails = async () => {
+      // const userInput = prompt("Please enter some text:");
+
+      console.log('WorkspaceDetail: Attempting to fetch workspace details for ID:', id); // Added log
+      // const userInput = prompt("Please enter some text:");
+
       try {
+        console.log("fetching workspace details", id);
         const response = await api.get(`/api/workspaces/${id}`);
+        const userInput = prompt("Please enter some text:");
+
+        console.log("response", response);
+        // const userInput = prompt("Please enter some text:");
         setWorkspace(response.data.data);
         setLoading(false);
+        console.log('WorkspaceDetail: Successfully fetched workspace details.'); // Added log
       } catch (err) {
+        console.error('WorkspaceDetail: Error fetching workspace details:', err.response?.data || err.message); // Added log
         setError(err.response?.data?.message || err.message);
         setLoading(false);
       }
@@ -56,18 +62,20 @@ const WorkspaceDetail = () => {
    * Handles adding a new member to the workspace.
    * @async
    * @function handleAddMember
-   * @param {object} values - Form values containing email and role.
+   * @param {object} e - The event object from the form submission.
    * @returns {Promise<void>}
    */
-  const handleAddMember = async (values) => {
+  const handleAddMember = async (e) => {
+    e.preventDefault();
     try {
-      const response = await api.post(`/api/workspaces/${id}/members`, values);
+      const response = await api.post(`/api/workspaces/${id}/members`, { email: newMemberEmail, role: newMemberRole });
       setWorkspace(response.data.data); // Update workspace with new member list
-      addMemberForm.resetFields();
+      setNewMemberEmail('');
+      setNewMemberRole('member');
       setShowAddMemberModal(false);
-      Modal.success({ content: 'Member added successfully!' });
+      alert('Member added successfully!');
     } catch (err) {
-      Modal.error({ content: err.response?.data?.message || err.message });
+      alert(`Error: ${err.response?.data?.message || err.message}`);
     }
   };
 
@@ -84,126 +92,140 @@ const WorkspaceDetail = () => {
   }
 
   return (
-    <Layout className="p-16 bg-transparent">
-      <Content>
-        <Row justify="space-between" align="middle" style={{ marginBottom: '32px' }}>
-          <Col>
-            <Title level={2} style={{ color: '#333333' }}>{workspace.name}</Title>
-          </Col>
-          <Col>
-            <Link to={`/workspaces/${workspace._id}/edit`}>
-              <Button type="primary" icon={<EditOutlined />}>Edit Workspace</Button>
-            </Link>
-          </Col>
-        </Row>
+    <div style={{ padding: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h2 style={{ color: '#333333' }}>{workspace.name}</h2>
+        <Link to={`/workspaces/${workspace._id}/edit`}>
+          <button style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+            Edit Workspace
+          </button>
+        </Link>
+      </div>
 
-        <Card title={<Title level={3} style={{ color: '#6A5ACD' }}>Details</Title>} style={{ marginBottom: '32px' }}>
-          <Text strong style={{ color: '#6A5ACD' }}>Description:</Text> <Text>{workspace.description}</Text><br />
-          <Text strong style={{ color: '#6A5ACD' }}>Owner:</Text> <Text>{workspace.owner?.name || 'N/A'}</Text><br />
-          <Text strong style={{ color: '#6A5ACD' }}>Visibility:</Text> <Text>{workspace.visibility}</Text><br />
-          <Text strong style={{ color: '#6A5ACD' }}>Created At:</Text> <Text>{new Date(workspace.createdAt).toLocaleDateString()}</Text>
-        </Card>
+      <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px', backgroundColor: '#fff', marginBottom: '20px' }}>
+        <h3 style={{ color: '#6A5ACD', marginBottom: '10px' }}>Details</h3>
+        <p><strong>Description:</strong> {workspace.description}</p>
+        <p><strong>Owner:</strong> {workspace.owner?.name || 'N/A'}</p>
+        <p><strong>Visibility:</strong> {workspace.visibility}</p>
+        <p><strong>Created At:</strong> {new Date(workspace.createdAt).toLocaleDateString()}</p>
+      </div>
 
-        <Card
-          title={<Title level={3} style={{ color: '#6A5ACD' }}>Members</Title>}
-          extra={
-            <Button type="primary" icon={<UserAddOutlined />} onClick={() => setShowAddMemberModal(true)}>
-              Add Member
-            </Button>
-          }
-          style={{ marginBottom: '32px' }}
-        >
-          {workspace.members && workspace.members.length > 0 ? (
-            <List
-              itemLayout="horizontal"
-              dataSource={workspace.members}
-              renderItem={(member) => (
-                <List.Item style={{ padding: '16px 0' }}>
-                  <List.Item.Meta
-                    title={<Text strong>{member.user.name}</Text>}
-                    description={<Text type="secondary">{member.user.email} ({member.role})</Text>}
-                  />
-                  {/* Add remove member functionality here if needed */}
-                </List.Item>
-              )}
-            />
-          ) : (
-            <Text type="secondary">No members in this workspace yet.</Text>
-          )}
-        </Card>
+      <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px', backgroundColor: '#fff', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <h3 style={{ color: '#6A5ACD' }}>Members</h3>
+          <button
+            onClick={() => setShowAddMemberModal(true)}
+            style={{ padding: '8px 12px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+          >
+            Add Member
+          </button>
+        </div>
+        {workspace.members && workspace.members.length > 0 ? (
+          <ul style={{ listStyle: 'none', padding: 0 }}>
+            {workspace.members.map((member) => (
+              <li key={member.user._id} style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>
+                <strong>{member.user.name}</strong> ({member.user.email}) - {member.role}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p style={{ color: '#6b7280' }}>No members in this workspace yet.</p>
+        )}
+      </div>
 
-        <Card
-          title={<Title level={3} style={{ color: '#6A5ACD' }}>Projects</Title>}
-          extra={
-            <Link to={`/projects/new?workspaceId=${workspace._id}`}>
-              <Button type="primary" icon={<PlusOutlined />}>Create New Project</Button>
-            </Link>
-          }
-        >
-          {workspace.projects && workspace.projects.length > 0 ? (
-            <List
-              itemLayout="horizontal"
-              dataSource={workspace.projects}
-              renderItem={(project) => (
-                <List.Item style={{ padding: '16px 0' }}>
-                  <List.Item.Meta
-                    title={<Link to={`/projects/${project._id}`}><Text strong>{project.name}</Text></Link>}
-                    description={<Text type="secondary">{project.description}</Text>}
-                  />
-                </List.Item>
-              )}
-            />
-          ) : (
-            <Text type="secondary">No projects in this workspace yet.</Text>
-          )}
-        </Card>
+      <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px', backgroundColor: '#fff' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <h3 style={{ color: '#6A5ACD' }}>Projects</h3>
+          <Link to={`/projects/new?workspaceId=${workspace._id}`}>
+            <button style={{ padding: '8px 12px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+              Create New Project
+            </button>
+          </Link>
+        </div>
+        {workspace.projects && workspace.projects.length > 0 ? (
+          <ul style={{ listStyle: 'none', padding: 0 }}>
+            {workspace.projects.map((project) => (
+              <li key={project._id} style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>
+                <Link to={`/projects/${project._id}`} style={{ textDecoration: 'none', color: '#007bff' }}>
+                  <strong>{project.name}</strong>
+                </Link>
+                <p style={{ margin: '5px 0 0 0', color: '#555' }}>{project.description}</p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p style={{ color: '#6b7280' }}>No projects in this workspace yet.</p>
+        )}
+      </div>
 
-        <Modal
-          title={<Title level={4} style={{ color: '#6A5ACD' }}>Add New Member</Title>}
-          open={showAddMemberModal}
-          onCancel={() => {
-            setShowAddMemberModal(false);
-            addMemberForm.resetFields();
-          }}
-          footer={null} // Hide default footer buttons
-        >
-          <Form form={addMemberForm} onFinish={handleAddMember} layout="vertical" style={{ gap: '16px' }}>
-            <Form.Item
-              name="email"
-              label="Member Email"
-              rules={[{ required: true, message: 'Please input member email!', type: 'email' }]}
-            >
-              <Input size="large" />
-            </Form.Item>
-            <Form.Item
-              name="role"
-              label="Role"
-              initialValue="member"
-              rules={[{ required: true, message: 'Please select a role!' }]}
-            >
-              <Select size="large">
-                <Option value="member">Member</Option>
-                <Option value="editor">Editor</Option>
-                <Option value="admin">Admin</Option>
-              </Select>
-            </Form.Item>
-            <Form.Item style={{ marginBottom: '0' }}>
-              <Space>
-                <Button onClick={() => {
-                  setShowAddMemberModal(false);
-                  addMemberForm.resetFields();
-                }}>
+      {showAddMemberModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+            width: '400px',
+            textAlign: 'left',
+          }}>
+            <h4 style={{ color: '#333', marginBottom: '15px' }}>Add New Member</h4>
+            <form onSubmit={handleAddMember}>
+              <div style={{ marginBottom: '15px' }}>
+                <label htmlFor="memberEmail" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Member Email</label>
+                <input
+                  type="email"
+                  id="memberEmail"
+                  value={newMemberEmail}
+                  onChange={(e) => setNewMemberEmail(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: '15px' }}>
+                <label htmlFor="memberRole" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Role</label>
+                <select
+                  id="memberRole"
+                  value={newMemberRole}
+                  onChange={(e) => setNewMemberRole(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                  required
+                >
+                  <option value="member">Member</option>
+                  <option value="editor">Editor</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowAddMemberModal(false)}
+                  style={{ padding: '10px 15px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                >
                   Cancel
-                </Button>
-                <Button type="primary" htmlType="submit">
+                </button>
+                <button
+                  type="submit"
+                  style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                >
                   Add Member
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        </Modal>
-      </Content>
-    </Layout>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

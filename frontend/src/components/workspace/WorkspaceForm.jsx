@@ -1,20 +1,14 @@
 /**
  * @file WorkspaceForm.jsx
- * @description This file implements the WorkspaceForm component, used for creating and editing workspaces using Ant Design.
+ * @description This file implements the WorkspaceForm component, used for creating and editing workspaces using basic HTML.
  * It handles form submission, validation, and interaction with the backend API.
  */
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
-
-
-// Ant Design Components
-import { Layout, Form, Input, Select, Button, Card, Typography, message } from 'antd';
-
-const { Content } = Layout;
-const { Title } = Typography;
-const { Option } = Select;
+import Loading from '../common/Loading';
+import Error from '../common/Error';
 
 /**
  * WorkspaceForm Component
@@ -25,7 +19,9 @@ const { Option } = Select;
 const WorkspaceForm = ({ isEditMode = false }) => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [form] = Form.useForm();
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [visibility, setVisibility] = useState('private');
   const [loading, setLoading] = useState(isEditMode);
   const [error, setError] = useState(null);
 
@@ -40,7 +36,9 @@ const WorkspaceForm = ({ isEditMode = false }) => {
       const fetchWorkspaceData = async () => {
         try {
           const response = await api.get(`/api/workspaces/${id}`);
-          form.setFieldsValue(response.data.data);
+          setName(response.data.data.name);
+          setDescription(response.data.data.description);
+          setVisibility(response.data.data.visibility);
           setLoading(false);
         } catch (err) {
           setError(err.response?.data?.message || err.message);
@@ -49,31 +47,37 @@ const WorkspaceForm = ({ isEditMode = false }) => {
       };
       fetchWorkspaceData();
     }
-  }, [isEditMode, id, form]);
+  }, [isEditMode, id]);
 
   /**
    * Handles form submission.
    * @async
-   * @function onFinish
-   * @param {object} values - The form values.
+   * @function handleSubmit
+   * @param {object} e - The event object.
    * @returns {Promise<void>}
    */
-  const onFinish = async (values) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
     setError(null);
+    const values = { name, description, visibility };
     try {
       if (isEditMode) {
+        console.log('WorkspaceForm: Attempting to update workspace with ID:', id);
         await api.put(`/api/workspaces/${id}`, values);
-        message.success('Workspace updated successfully!');
+        alert('Workspace updated successfully!');
         navigate(`/workspaces/${id}`);
       } else {
+        console.log('WorkspaceForm: Attempting to create new workspace', values);
         const response = await api.post('/api/workspaces', values);
-        message.success('Workspace created successfully!');
+        console.log('WorkspaceForm: Workspace created successfully, navigating to:', `/workspaces/${response.data.data._id}`);
+        alert('Workspace created successfully!');
         navigate(`/workspaces/${response.data.data._id}`);
       }
     } catch (err) {
+      console.error('WorkspaceForm: Error during form submission:', err.response?.data || err.message);
       setError(err.response?.data?.message || err.message);
-      message.error(err.response?.data?.message || err.message);
+      alert(`Error: ${err.response?.data?.message || err.message}`);
     } finally {
       setLoading(false);
     }
@@ -88,54 +92,59 @@ const WorkspaceForm = ({ isEditMode = false }) => {
   }
 
   return (
-    <Layout className="p-16 bg-transparent">
-      <Content>
-        <Title level={2} className="text-neutral-800 mb-32">{isEditMode ? 'Edit Workspace' : 'Create New Workspace'}</Title>
-        <Card bordered={false}>
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={onFinish}
-            initialValues={{ visibility: 'private' }} // Set default for new workspace
-            className="space-y-4"
+    <div style={{ padding: '20px' }}>
+      <h2 style={{ color: '#333333', marginBottom: '20px' }}>{isEditMode ? 'Edit Workspace' : 'Create New Workspace'}</h2>
+      <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px', backgroundColor: '#fff' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <div>
+            <label htmlFor="name" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Workspace Name</label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="description" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Description</label>
+            <textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+              rows="4"
+              required
+            ></textarea>
+          </div>
+
+          <div>
+            <label htmlFor="visibility" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Visibility</label>
+            <select
+              id="visibility"
+              value={visibility}
+              onChange={(e) => setVisibility(e.target.value)}
+              style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+              required
+            >
+              <option value="private">Private</option>
+              <option value="public">Public</option>
+              <option value="workspace">Workspace Members Only</option>
+            </select>
+          </div>
+
+          <button
+            type="submit"
+            style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+            disabled={loading}
           >
-            <Form.Item
-              name="name"
-              label={<span className="text-neutral-700">Workspace Name</span>}
-              rules={[{ required: true, message: 'Please input the workspace name!' }]}
-            >
-              <Input size="large" />
-            </Form.Item>
-
-            <Form.Item
-              name="description"
-              label={<span className="text-neutral-700">Description</span>}
-              rules={[{ required: true, message: 'Please input the description!' }]}
-            >
-              <Input.TextArea rows={4} size="large" />
-            </Form.Item>
-
-            <Form.Item
-              name="visibility"
-              label={<span className="text-neutral-700">Visibility</span>}
-              rules={[{ required: true, message: 'Please select visibility!' }]}
-            >
-              <Select size="large">
-                <Option value="private">Private</Option>
-                <Option value="public">Public</Option>
-                <Option value="workspace">Workspace Members Only</Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item className="mb-0">
-              <Button type="primary" htmlType="submit" loading={loading} size="large">
-                {isEditMode ? 'Update Workspace' : 'Create Workspace'}
-              </Button>
-            </Form.Item>
-          </Form>
-        </Card>
-      </Content>
-    </Layout>
+            {isEditMode ? 'Update Workspace' : 'Create Workspace'}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 };
 

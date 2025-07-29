@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import api from '../services/api';
-import { message } from 'antd'; // Import Ant Design message component
+
 
 export const AuthContext = createContext();
 
@@ -10,30 +10,35 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('AuthContext: useEffect - checking for token (isAuthenticated changed)');
     const token = localStorage.getItem('token');
     if (token) {
+      console.log('AuthContext: Token found in localStorage', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       api
         .get('/api/auth/me')
         .then((res) => {
           setIsAuthenticated(true);
           setUser(res.data.data); // Access data property
-          console.log('User authenticated', res.data.data);
+          console.log('AuthContext: User authenticated successfully', res.data.data);
           setLoading(false);
         })
         .catch((err) => {
-          console.error(err);
-          message.error('Failed to authenticate user. Please log in again.');
+          console.error('AuthContext: Failed to authenticate user with token', err);
+          console.error('AuthContext: Failed to authenticate user. Please log in again.');
           setIsAuthenticated(false);
           setUser(null);
           setLoading(false);
+          localStorage.removeItem('token'); // Clear invalid token
         });
     } else {
+      console.log('AuthContext: No token found in localStorage');
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const login = async (email, password) => {
+    console.log('AuthContext: Attempting login for', email);
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -45,22 +50,23 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.post('/api/auth/login', body, config);
       localStorage.setItem('token', res.data.token);
-      console.log('Token set', res.data.token);
+      console.log('AuthContext: Login successful, token stored', res.data.token);
       api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
       const userRes = await api.get('/api/auth/me');
-      console.log('User authenticated', userRes.data.data);
+      console.log('AuthContext: User data fetched after login', userRes.data.data);
       setIsAuthenticated(true);
       setUser(userRes.data.data); // Access data property
-      message.success('Login successful!');
+      console.log('AuthContext: Login process completed successfully!');
       return true;
     } catch (err) {
-      console.error(err.response.data);
-      message.error(err.response?.data?.error || 'Login failed. Please check your credentials.');
+      console.error('AuthContext: Login failed', err.response?.data || err.message);
+      console.error(err.response?.data?.error || 'Login failed. Please check your credentials.');
       return false;
     }
   };
 
   const register = async ({ name, email, password }) => {
+    console.log('AuthContext: Attempting registration for', email);
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -72,25 +78,27 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.post('/api/auth/register', body, config);
       localStorage.setItem('token', res.data.token);
+      console.log('AuthContext: Registration successful, token stored', res.data.token);
       api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
       const userRes = await api.get('/api/auth/me');
       setIsAuthenticated(true);
       setUser(userRes.data.data); // Access data property
-      message.success('Registration successful!');
+      console.log('AuthContext: Registration process completed successfully!', userRes.data.data);
       return true;
     } catch (err) {
-      console.error(err.response.data);
+      console.error('AuthContext: Registration failed', err.response?.data || err.message);
       message.error(err.response?.data?.error || 'Registration failed. Please try again.');
       return false;
     }
   };
 
   const logout = () => {
+    console.log('AuthContext: Logging out user');
     localStorage.removeItem('token');
     delete api.defaults.headers.common['Authorization'];
     setIsAuthenticated(false);
     setUser(null);
-    message.info('Logged out successfully.');
+    console.log('AuthContext: Logged out successfully.');
   };
 
   return (

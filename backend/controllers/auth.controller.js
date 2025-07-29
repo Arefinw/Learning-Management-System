@@ -36,7 +36,7 @@ exports.register = async (req, res, next) => {
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
-      { expiresIn: 3600 },
+      { expiresIn: '7d' },
       (err, token) => {
         if (err) return next(new ErrorResponse('Token generation failed', 500));
         res.status(201).json({ success: true, token });
@@ -75,7 +75,7 @@ exports.login = async (req, res, next) => {
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
-      { expiresIn: 3600 },
+      { expiresIn: '7d' },
       (err, token) => {
         if (err) return next(new ErrorResponse('Token generation failed', 500));
         res.status(200).json({ success: true, token });
