@@ -5,6 +5,7 @@ const ErrorResponse = require('../utils/errorResponse');
 // Protect routes
 exports.protect = async (req, res, next) => {
   let token;
+  // console.log("Token: ", req.headers.authorization);
 
   if (
     req.headers.authorization &&

@@ -21,7 +21,7 @@ api.interceptors.request.use(
   },
   (error) => {
     console.error('API Request Interceptor Error:', error);
-    return Promise.reject(error);
+    return error;
   }
 );
 
@@ -31,13 +31,13 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error('API Response Interceptor Error:', error.response?.status, error.config?.url, error.response?.data);
+    console.log('API Response Interceptor Error:', error.response?.status, error.config?.url, error.response?.data);
     // if (error.response.status === 401) {
     //   console.error('Session expired or unauthorized. Please log in again.');
     //   localStorage.removeItem('token');
     //   window.location.href = '/login';
     // }
-    return Promise.reject(error);
+    return false;
   }
 );
 

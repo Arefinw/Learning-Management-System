@@ -33,18 +33,14 @@ const WorkspaceDetail = () => {
      * @returns {Promise<void>}
      */
     const fetchWorkspaceDetails = async () => {
-      // const userInput = prompt("Please enter some text:");
 
       console.log('WorkspaceDetail: Attempting to fetch workspace details for ID:', id); // Added log
-      // const userInput = prompt("Please enter some text:");
 
       try {
         console.log("fetching workspace details", id);
         const response = await api.get(`/api/workspaces/${id}`);
-        const userInput = prompt("Please enter some text:");
 
         console.log("response", response);
-        // const userInput = prompt("Please enter some text:");
         setWorkspace(response.data.data);
         setLoading(false);
         console.log('WorkspaceDetail: Successfully fetched workspace details.'); // Added log

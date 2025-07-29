@@ -49,12 +49,30 @@ exports.getWorkspace = async (req, res, next) => {
       return next(new ErrorResponse('Workspace not found', 404));
     }
 
-    // Check for user authorization based on visibility
-    if (workspace.visibility === 'private' && workspace.owner.toString() !== req.user.id) {
-      return next(new ErrorResponse('User not authorized', 401));
-    }
-    if (workspace.visibility === 'workspace' && !workspace.members.some(member => member.user._id.toString() === req.user.id)) {
-      return next(new ErrorResponse('User not authorized to view this workspace', 401));
+    console.log("workspace", workspace)
+
+    console.log("workspace's owner", workspace.owner._id.toString())
+    console.log("user's id", req.user.id)
+    // Check authorization based on visibility settings
+    if (workspace.owner._id.toString() === req.user.id) {
+      // OWNER: Always authorized - no further checks needed
+    } else {
+      // NOT OWNER: Check visibility-based access
+      if (workspace.visibility === 'public') {
+        // PUBLIC: Anyone can access - no further checks needed for authenticated users
+      } else if (workspace.visibility === 'private') {
+        // PRIVATE: Only explicit members can access
+        const isExplicitMember = workspace.members.some(member => member.user.toString() === req.user.id);
+        if (!isExplicitMember) {
+          return next(new ErrorResponse('User not authorized to view this workspace', 401));
+        }
+      } else if (workspace.visibility === 'workspace') {
+        // WORKSPACE: All workspace members can access
+        const isWorkspaceMember = workspace.members.some(member => member.user.toString() === req.user.id);
+        if (!isWorkspaceMember) {
+          return next(new ErrorResponse('User not authorized to view this workspace', 401));
+        }
+      }
     }
 
 
