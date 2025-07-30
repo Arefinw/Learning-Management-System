@@ -1,12 +1,28 @@
+/**
+ * @file project.controller.js
+ * @description Defines the controller functions for project-related operations.
+ * @module controllers/project
+ * @requires ../models/Project
+ * @requires ../models/Workspace
+ * @requires ../models/Folder
+ * @requires ../models/Pathway
+ * @requires ../utils/errorResponse
+ */
+
 const Project = require('../models/Project');
 const Workspace = require('../models/Workspace'); // Import Workspace model
 const Folder = require('../models/Folder'); // Import Folder model
 const Pathway = require('../models/Pathway'); // Import Pathway model
 const ErrorResponse = require('../utils/errorResponse');
 
-// @desc    Get all projects
-// @route   GET /api/projects
-// @access  Private
+/**
+ * @function getProjects
+ * @description Get all projects for the logged in user.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.getProjects = async (req, res, next) => {
   try {
     const projects = await Project.find({ owner: req.user.id })
@@ -18,9 +34,14 @@ exports.getProjects = async (req, res, next) => {
   }
 };
 
-// @desc    Get projects by workspace
-// @route   GET /api/workspaces/:workspaceId/projects
-// @access  Private
+/**
+ * @function getProjectsByWorkspace
+ * @description Get all projects for a given workspace.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.getProjectsByWorkspace = async (req, res, next) => {
   try {
     const projects = await Project.find({ workspace: req.params.workspaceId, owner: req.user.id })
@@ -32,9 +53,14 @@ exports.getProjectsByWorkspace = async (req, res, next) => {
   }
 };
 
-// @desc    Create a project
-// @route   POST /api/projects
-// @access  Private
+/**
+ * @function createProject
+ * @description Create a new project.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.createProject = async (req, res, next) => {
   const { name, description, workspace, visibility } = req.body;
 
@@ -60,9 +86,14 @@ exports.createProject = async (req, res, next) => {
   }
 };
 
-// @desc    Get single project
-// @route   GET /api/projects/:id
-// @access  Private
+/**
+ * @function getProject
+ * @description Get a single project by ID.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.getProject = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id)
@@ -98,9 +129,14 @@ exports.getProject = async (req, res, next) => {
   }
 };
 
-// @desc    Update project
-// @route   PUT /api/projects/:id
-// @access  Private
+/**
+ * @function updateProject
+ * @description Update a project.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.updateProject = async (req, res, next) => {
   const { name, description, visibility } = req.body;
 
@@ -134,9 +170,14 @@ exports.updateProject = async (req, res, next) => {
   }
 };
 
-// @desc    Delete project
-// @route   DELETE /api/projects/:id
-// @access  Private
+/**
+ * @function deleteProject
+ * @description Delete a project.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.deleteProject = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id);
@@ -167,9 +208,14 @@ exports.deleteProject = async (req, res, next) => {
   }
 };
 
-// @desc    Get project tree
-// @route   GET /api/projects/:id/tree
-// @access  Private
+/**
+ * @function getProjectTree
+ * @description Get the folder and pathway tree for a project.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.getProjectTree = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id)
@@ -191,9 +237,14 @@ exports.getProjectTree = async (req, res, next) => {
   }
 };
 
-// @desc    Delete folder from project
-// @route   DELETE /api/projects/:projectId/folders/:folderId
-// @access  Private
+/**
+ * @function deleteFolderFromProject
+ * @description Delete a folder from a project.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.deleteFolderFromProject = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.projectId);
@@ -222,9 +273,14 @@ exports.deleteFolderFromProject = async (req, res, next) => {
   }
 };
 
-// @desc    Delete pathway from project
-// @route   DELETE /api/projects/:projectId/pathways/:pathwayId
-// @access  Private
+/**
+ * @function deletePathwayFromProject
+ * @description Delete a pathway from a project.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.deletePathwayFromProject = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.projectId);
@@ -252,4 +308,3 @@ exports.deletePathwayFromProject = async (req, res, next) => {
     next(err);
   }
 };
-

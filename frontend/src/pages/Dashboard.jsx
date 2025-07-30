@@ -1,3 +1,15 @@
+/**
+ * @file Dashboard.jsx
+ * @description This component displays the user's dashboard, including statistics and recent activity.
+ * @module pages/Dashboard
+ * @requires react
+ * @requires react-router-dom
+ * @requires ../context/AuthContext
+ * @requires ../services/api
+ * @requires antd
+ * @requires @ant-design/icons
+ */
+
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
@@ -20,7 +32,8 @@ import { Link } from 'react-router-dom';
 const { Title, Text } = Typography;
 
 /**
- * Dashboard Component
+ * @component Dashboard
+ * @description The main dashboard page for authenticated users.
  * @returns {JSX.Element} The Dashboard page.
  */
 const Dashboard = () => {
@@ -31,9 +44,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     /**
-     * Fetches dashboard data from the backend.
-     * @async
      * @function fetchDashboardData
+     * @description Fetches dashboard data from the backend.
      * @returns {Promise<void>}
      */
     const fetchDashboardData = async () => {

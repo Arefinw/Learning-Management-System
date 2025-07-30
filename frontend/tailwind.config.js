@@ -1,4 +1,9 @@
 /** @type {import('tailwindcss').Config} */
+/**
+ * @file tailwind.config.js
+ * @description The configuration file for Tailwind CSS.
+ * @module tailwind.config
+ */
 export default {
   content: [
     "./index.html",

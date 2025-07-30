@@ -1,3 +1,17 @@
+/**
+ * @file ProjectTree.jsx
+ * @description This component displays the folder and pathway structure of a project in a tree view.
+ * It allows for searching and interacting with the tree nodes.
+ * @module components/project/ProjectTree
+ * @requires react
+ * @requires react-router-dom
+ * @requires ../../context/AuthContext
+ * @requires ../../services/api
+ * @requires ../common/Loading
+ * @requires ../common/Error
+ * @requires antd
+ */
+
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../services/api'; // Use the centralized API service
@@ -6,6 +20,14 @@ import { message } from 'antd'; // Import Ant Design message component
 import Loading from '../common/Loading';
 import Error from '../common/Error';
 
+/**
+ * @component FolderNode
+ * @description A recursive component that renders a folder and its children in the project tree.
+ * @param {object} props - The component props.
+ * @param {object} props.folder - The folder to render.
+ * @param {string} props.searchTerm - The search term to filter the tree.
+ * @returns {JSX.Element}
+ */
 const FolderNode = ({ folder, searchTerm }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
@@ -23,12 +45,21 @@ const FolderNode = ({ folder, searchTerm }) => {
 
   const hasVisibleChildren = filteredSubFolders.length > 0 || filteredPathways.length > 0;
 
+  /**
+   * @function handleContextMenu
+   * @description Displays the context menu at the cursor position.
+   * @param {React.MouseEvent} e - The mouse event.
+   */
   const handleContextMenu = (e) => {
     e.preventDefault();
     setShowContextMenu(true);
     setContextMenuPosition({ x: e.clientX, y: e.clientY });
   };
 
+  /**
+   * @function handleCloseContextMenu
+   * @description Closes the context menu.
+   */
   const handleCloseContextMenu = () => {
     setShowContextMenu(false);
   };
@@ -111,6 +142,13 @@ const FolderNode = ({ folder, searchTerm }) => {
   );
 };
 
+/**
+ * @component ProjectTree
+ * @description A component that displays the folder and pathway structure of a project.
+ * @param {object} props - The component props.
+ * @param {string} props.projectId - The ID of the project to display.
+ * @returns {JSX.Element} The project tree component.
+ */
 const ProjectTree = ({ projectId }) => {
   const { user } = useContext(AuthContext);
   const [project, setProject] = useState(null);
@@ -119,6 +157,11 @@ const ProjectTree = ({ projectId }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    /**
+     * @function fetchProjectTree
+     * @description Fetches the project tree data from the backend.
+     * @returns {Promise<void>}
+     */
     const fetchProjectTree = async () => {
       if (user) {
         try {

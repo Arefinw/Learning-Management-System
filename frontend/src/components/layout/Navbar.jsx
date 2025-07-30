@@ -1,15 +1,30 @@
 /**
  * @file Navbar.jsx
- * @description A very basic navigation bar component.
+ * @description This component renders the main navigation bar for the application.
+ * It displays different links based on the user's authentication status.
+ * @module components/layout/Navbar
+ * @requires react
+ * @requires react-router-dom
+ * @requires ../../context/AuthContext
  */
 
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 
+/**
+ * @component Navbar
+ * @description The main navigation bar component.
+ * It includes links to the home page, dashboard, and other sections, as well as login/logout buttons.
+ * @returns {JSX.Element} The navigation bar component.
+ */
 const Navbar = () => {
   const { isAuthenticated, logout } = useContext(AuthContext);
 
+  /**
+   * @function handleLogout
+   * @description Logs the user out by calling the logout function from the AuthContext.
+   */
   const handleLogout = () => {
     logout();
   };

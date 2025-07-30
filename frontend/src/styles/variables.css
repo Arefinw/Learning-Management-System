@@ -2,6 +2,7 @@
  * @file variables.css
  * @description Defines CSS variables for the application's color palette, typography, spacing, and other design tokens.
  * This file centralizes design system values for consistent styling across the application.
+ * @module styles/variables
  */
 
 :root {

@@ -2,6 +2,12 @@
  * @file WorkspaceForm.jsx
  * @description This file implements the WorkspaceForm component, used for creating and editing workspaces using basic HTML.
  * It handles form submission, validation, and interaction with the backend API.
+ * @module components/workspace/WorkspaceForm
+ * @requires react
+ * @requires react-router-dom
+ * @requires ../../services/api
+ * @requires ../common/Loading
+ * @requires ../common/Error
  */
 
 import React, { useState, useEffect } from 'react';
@@ -11,7 +17,8 @@ import Loading from '../common/Loading';
 import Error from '../common/Error';
 
 /**
- * WorkspaceForm Component
+ * @component WorkspaceForm
+ * @description A form for creating and editing workspaces.
  * @param {object} props - The component props.
  * @param {boolean} [props.isEditMode=false] - Whether the form is in edit mode.
  * @returns {JSX.Element} The WorkspaceForm component.
@@ -28,9 +35,8 @@ const WorkspaceForm = ({ isEditMode = false }) => {
   useEffect(() => {
     if (isEditMode && id) {
       /**
-       * Fetches workspace data for editing.
-       * @async
        * @function fetchWorkspaceData
+       * @description Fetches workspace data for editing.
        * @returns {Promise<void>}
        */
       const fetchWorkspaceData = async () => {
@@ -50,10 +56,9 @@ const WorkspaceForm = ({ isEditMode = false }) => {
   }, [isEditMode, id]);
 
   /**
-   * Handles form submission.
-   * @async
    * @function handleSubmit
-   * @param {object} e - The event object.
+   * @description Handles form submission.
+   * @param {React.FormEvent<HTMLFormElement>} e - The event object.
    * @returns {Promise<void>}
    */
   const handleSubmit = async (e) => {

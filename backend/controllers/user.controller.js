@@ -1,9 +1,22 @@
+/**
+ * @file user.controller.js
+ * @description Defines the controller functions for user-related operations.
+ * @module controllers/user
+ * @requires ../models/User
+ * @requires ../utils/errorResponse
+ */
+
 const User = require('../models/User');
 const ErrorResponse = require('../utils/errorResponse');
 
-// @desc    Get all users
-// @route   GET /api/users
-// @access  Private/Admin
+/**
+ * @function getUsers
+ * @description Get all users.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.getUsers = async (req, res, next) => {
   try {
     const users = await User.find();
@@ -13,9 +26,14 @@ exports.getUsers = async (req, res, next) => {
   }
 };
 
-// @desc    Get user by ID
-// @route   GET /api/users/:id
-// @access  Private
+/**
+ * @function getUser
+ * @description Get a single user by ID.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.getUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
@@ -28,9 +46,14 @@ exports.getUser = async (req, res, next) => {
   }
 };
 
-// @desc    Update user
-// @route   PUT /api/users/:id
-// @access  Private
+/**
+ * @function updateUser
+ * @description Update a user's details.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.updateUser = async (req, res, next) => {
   const { name, email } = req.body;
 

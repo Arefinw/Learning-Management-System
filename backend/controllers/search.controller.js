@@ -1,11 +1,26 @@
+/**
+ * @file search.controller.js
+ * @description Defines the controller function for search operations.
+ * @module controllers/search
+ * @requires ../models/Project
+ * @requires ../models/Folder
+ * @requires ../models/Pathway
+ * @requires ../utils/errorResponse
+ */
+
 const Project = require('../models/Project');
 const Folder = require('../models/Folder');
 const Pathway = require('../models/Pathway');
 const ErrorResponse = require('../utils/errorResponse');
 
-// @desc    Search across projects, folders, and pathways
-// @route   GET /api/search
-// @access  Private
+/**
+ * @function search
+ * @description Search across projects, folders, and pathways.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.search = async (req, res, next) => {
   try {
     const { q } = req.query;

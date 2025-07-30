@@ -1,6 +1,11 @@
 /**
  * @file dashboard.controller.js
  * @description This file contains the controller functions for dashboard related operations.
+ * @module controllers/dashboard
+ * @requires ../models/Project
+ * @requires ../models/Workspace
+ * @requires ../models/Pathway
+ * @requires ../utils/errorResponse
  */
 
 const Project = require('../models/Project');
@@ -11,11 +16,9 @@ const ErrorResponse = require('../utils/errorResponse');
 /**
  * @function getDashboardStats
  * @description Get dashboard statistics for the authenticated user.
- * @route GET /api/dashboard/stats
- * @access Private
- * @param {object} req - The request object.
- * @param {object} res - The response object.
- * @param {function} next - The next middleware function.
+ * @param {import('express').Request} req - The request object.
+ * @param {import('express').Response} res - The response object.
+ * @param {import('express').NextFunction} next - The next middleware function.
  * @returns {Promise<void>}
  */
 exports.getDashboardStats = async (req, res, next) => {
@@ -29,7 +32,6 @@ exports.getDashboardStats = async (req, res, next) => {
     const totalProjects = await Project.countDocuments({ owner: userId });
 
     // Get total completed pathways (assuming a 'completed' field in Pathway model)
-    // This might need adjustment based on the actual Pathway model structure
     const completedPathways = await Pathway.countDocuments({ owner: userId, completed: true });
 
     // Fetch recent activities (example: last 5 created projects or workspaces)

@@ -1,3 +1,16 @@
+/**
+ * @file Register.jsx
+ * @description This component renders the registration page, allowing new users to create an account.
+ * It integrates with Ant Design for UI components and Tailwind CSS for styling.
+ * It uses AuthContext for registration logic and react-router-dom for navigation.
+ * @module components/auth/Register
+ * @requires react
+ * @requires ../../context/AuthContext
+ * @requires antd
+ * @requires @ant-design/icons
+ * @requires react-router-dom
+ */
+
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { Form, Input, Button, Card, Typography, Space, Divider, message } from 'antd';
@@ -6,11 +19,22 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
+/**
+ * @component Register
+ * @description A component that provides a user registration form.
+ * It includes fields for name, email, password, and password confirmation, as well as social registration options.
+ * @returns {JSX.Element} The registration form and related UI elements.
+ */
 const Register = () => {
   const { register } = useContext(AuthContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
+  /**
+   * @function onFinish
+   * @description Handles the form submission for user registration.
+   * @param {object} values - The form values containing user details.
+   */
   const onFinish = async (values) => {
     if (values.password !== values.password2) {
       message.error('Passwords do not match!');

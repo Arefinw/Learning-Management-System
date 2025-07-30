@@ -3,6 +3,12 @@
  * @description This component renders the login page, allowing users to authenticate.
  * It integrates with Ant Design for UI components and Tailwind CSS for styling.
  * It uses AuthContext for authentication logic and react-router-dom for navigation.
+ * @module components/auth/Login
+ * @requires react
+ * @requires ../../context/AuthContext
+ * @requires antd
+ * @requires @ant-design/icons
+ * @requires react-router-dom
  */
 
 import React, { useState, useContext } from 'react';
@@ -14,7 +20,9 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 const { Title, Text } = Typography;
 
 /**
- * Login Component
+ * @component Login
+ * @description A component that provides a user login form.
+ * It includes fields for email and password, social login options, and a link to the registration page.
  * @returns {JSX.Element} The login form and related UI elements.
  */
 const Login = () => {
@@ -28,7 +36,8 @@ const Login = () => {
   const from = location.state?.from?.pathname || "/dashboard";
 
   /**
-   * Handles the form submission for user login.
+   * @function onFinish
+   * @description Handles the form submission for user login.
    * @param {object} values - The form values containing email and password.
    */
   const onFinish = async (values) => {

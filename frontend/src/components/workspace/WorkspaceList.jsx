@@ -1,3 +1,16 @@
+/**
+ * @file WorkspaceList.jsx
+ * @description This component displays a list of workspaces.
+ * It fetches the workspaces from the backend and allows users to create, view, edit, and delete them.
+ * @module components/workspace/WorkspaceList
+ * @requires react
+ * @requires react-router-dom
+ * @requires ../../context/AuthContext
+ * @requires ../../services/api
+ * @requires antd
+ * @requires @ant-design/icons
+ */
+
 import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
@@ -12,7 +25,8 @@ const { Title, Text } = Typography;
 const { confirm } = Modal;
 
 /**
- * WorkspaceList Component
+ * @component WorkspaceList
+ * @description A component that displays a list of workspaces.
  * @returns {JSX.Element} The WorkspaceList page.
  */
 const WorkspaceList = () => {
@@ -23,9 +37,8 @@ const WorkspaceList = () => {
 
   useEffect(() => {
     /**
-     * Fetches the list of workspaces from the backend.
-     * @async
      * @function fetchWorkspaces
+     * @description Fetches the list of workspaces from the backend.
      * @returns {Promise<void>}
      */
     const fetchWorkspaces = async () => {
@@ -44,9 +57,8 @@ const WorkspaceList = () => {
   }, []);
 
   /**
-   * Handles the deletion of a workspace.
-   * @async
    * @function handleDelete
+   * @description Handles the deletion of a workspace.
    * @param {string} id - The ID of the workspace to delete.
    * @returns {Promise<void>}
    */
@@ -61,10 +73,9 @@ const WorkspaceList = () => {
   };
 
   /**
-   * Shows the delete confirmation modal.
-   * @function showDeleteConfirm
+   * @function showDeleteConfirmModal
+   * @description Shows the delete confirmation modal.
    * @param {object} workspace - The workspace object to delete.
-   * @returns {void}
    */
   const showDeleteConfirmModal = (workspace) => {
     confirm({

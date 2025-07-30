@@ -1,3 +1,18 @@
+/**
+ * @file PathwayList.jsx
+ * @description This component displays a list of pathways.
+ * It can display all pathways or pathways for a specific project.
+ * @module components/pathway/PathwayList
+ * @requires react
+ * @requires react-router-dom
+ * @requires ../../context/AuthContext
+ * @requires ../../services/api
+ * @requires ../common/Loading
+ * @requires ../common/Error
+ * @requires antd
+ * @requires @ant-design/icons
+ */
+
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../services/api';
@@ -12,6 +27,13 @@ import { PlusOutlined } from '@ant-design/icons';
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
+/**
+ * @component PathwayList
+ * @description A component that displays a list of pathways.
+ * @param {object} props - The component props.
+ * @param {string} [props.projectId] - The ID of the project to filter pathways by.
+ * @returns {JSX.Element} The pathway list page.
+ */
 const PathwayList = ({ projectId }) => {
   const { user } = useContext(AuthContext);
   const [pathways, setPathways] = useState([]);
@@ -19,6 +41,11 @@ const PathwayList = ({ projectId }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    /**
+     * @function fetchPathways
+     * @description Fetches the list of pathways from the backend.
+     * @returns {Promise<void>}
+     */
     const fetchPathways = async () => {
       try {
         const url = projectId ? `/api/pathways?project=${projectId}` : '/api/pathways';

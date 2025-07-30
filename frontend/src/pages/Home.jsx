@@ -1,9 +1,23 @@
+/**
+ * @file Home.jsx
+ * @description This component is the home page of the application.
+ * It displays a welcome message to users.
+ * @module pages/Home
+ * @requires react
+ * @requires antd
+ */
+
 import React from 'react';
 import { Layout, Typography } from 'antd';
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
+/**
+ * @component Home
+ * @description The home page of the application.
+ * @returns {JSX.Element} The home page component.
+ */
 const Home = () => {
   return (
     <Layout className="min-h-screen flex items-center justify-center gradient-background">

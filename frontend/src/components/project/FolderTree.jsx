@@ -1,6 +1,22 @@
+/**
+ * @file FolderTree.jsx
+ * @description This component recursively renders a folder and its contents as a tree.
+ * It is used within the ProjectTree component to display the project's folder structure.
+ * @module components/project/FolderTree
+ * @requires react
+ * @requires react-router-dom
+ */
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+/**
+ * @component FolderTree
+ * @description A recursive component to display a folder and its sub-folders and pathways in a tree structure.
+ * @param {object} props - The component props.
+ * @param {object} props.folder - The folder object to render.
+ * @returns {JSX.Element} The folder tree node.
+ */
 const FolderTree = ({ folder }) => {
   return (
     <li>

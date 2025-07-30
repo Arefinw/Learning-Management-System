@@ -3,6 +3,27 @@
  * @description The main application component that sets up routing and global layout.
  * It uses React Router for navigation and Ant Design's Layout components for structure.
  * AuthProvider wraps the entire application to provide authentication context.
+ * @module App
+ * @requires react
+ * @requires react-router-dom
+ * @requires ./components/layout/Navbar
+ * @requires ./components/layout/Footer
+ * @requires ./pages/Home
+ * @requires ./pages/Dashboard
+ * @requires ./components/auth/Login
+ * @requires ./components/auth/Register
+ * @requires ./components/workspace/WorkspaceList
+ * @requires ./components/workspace/WorkspaceDetail
+ * @requires ./components/workspace/WorkspaceForm
+ * @requires ./components/project/ProjectForm
+ * @requires ./components/project/ProjectList
+ * @requires ./components/project/ProjectDetail
+ * @requires ./components/pathway/PathwayDetail
+ * @requires ./components/pathway/PathwayEditor
+ * @requires ./pages/AdminPanel
+ * @requires ./pages/PublicView
+ * @requires ./context/AuthContext
+ * @requires ./components/auth/PrivateRoute
  */
 
 import React from 'react';
@@ -26,6 +47,12 @@ import PublicView from './pages/PublicView';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/auth/PrivateRoute';
 
+/**
+ * @component App
+ * @description The root component of the application.
+ * It sets up the router and the main layout.
+ * @returns {JSX.Element} The main application component.
+ */
 const App = () => {
   return (
     <Router>

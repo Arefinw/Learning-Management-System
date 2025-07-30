@@ -1,9 +1,22 @@
+/**
+ * @file pathway.controller.js
+ * @description Defines the controller functions for pathway-related operations.
+ * @module controllers/pathway
+ * @requires ../models/Pathway
+ * @requires ../utils/errorResponse
+ */
+
 const Pathway = require('../models/Pathway');
 const ErrorResponse = require('../utils/errorResponse');
 
-// @desc    Get all pathways
-// @route   GET /api/pathways
-// @access  Private
+/**
+ * @function getPathways
+ * @description Get all pathways for a given project.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.getPathways = async (req, res, next) => {
   try {
     const pathways = await Pathway.find({ project: req.query.project });
@@ -13,9 +26,14 @@ exports.getPathways = async (req, res, next) => {
   }
 };
 
-// @desc    Create a pathway
-// @route   POST /api/pathways
-// @access  Private
+/**
+ * @function createPathway
+ * @description Create a new pathway.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.createPathway = async (req, res, next) => {
   const { title, description, project, folder } = req.body;
 
@@ -34,9 +52,14 @@ exports.createPathway = async (req, res, next) => {
   }
 };
 
-// @desc    Get single pathway
-// @route   GET /api/pathways/:id
-// @access  Private
+/**
+ * @function getPathway
+ * @description Get a single pathway by ID.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.getPathway = async (req, res, next) => {
   try {
     const pathway = await Pathway.findById(req.params.id);
@@ -51,9 +74,14 @@ exports.getPathway = async (req, res, next) => {
   }
 };
 
-// @desc    Update pathway
-// @route   PUT /api/pathways/:id
-// @access  Private
+/**
+ * @function updatePathway
+ * @description Update a pathway.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.updatePathway = async (req, res, next) => {
   const { title, description } = req.body;
 
@@ -81,9 +109,14 @@ exports.updatePathway = async (req, res, next) => {
   }
 };
 
-// @desc    Delete pathway
-// @route   DELETE /api/pathways/:id
-// @access  Private
+/**
+ * @function deletePathway
+ * @description Delete a pathway.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.deletePathway = async (req, res, next) => {
   try {
     const pathway = await Pathway.findById(req.params.id);
@@ -100,9 +133,14 @@ exports.deletePathway = async (req, res, next) => {
   }
 };
 
-// @desc    Add item to pathway
-// @route   POST /api/pathways/:id/items
-// @access  Private
+/**
+ * @function addItem
+ * @description Add an item to a pathway.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.addItem = async (req, res, next) => {
   try {
     const pathway = await Pathway.findById(req.params.id);

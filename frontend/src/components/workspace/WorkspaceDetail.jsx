@@ -2,6 +2,13 @@
  * @file WorkspaceDetail.jsx
  * @description This file implements the WorkspaceDetail component, which displays the details of a single workspace using basic HTML.
  * It allows users to view workspace information, manage members, and view associated projects.
+ * @module components/workspace/WorkspaceDetail
+ * @requires react
+ * @requires react-router-dom
+ * @requires ../../context/AuthContext
+ * @requires ../../services/api
+ * @requires ../common/Loading
+ * @requires ../common/Error
  */
 
 import React, { useState, useEffect, useContext } from 'react';
@@ -12,7 +19,8 @@ import Loading from '../common/Loading';
 import Error from '../common/Error';
 
 /**
- * WorkspaceDetail Component
+ * @component WorkspaceDetail
+ * @description A component that displays the details of a specific workspace.
  * @returns {JSX.Element} The WorkspaceDetail page.
  */
 const WorkspaceDetail = () => {
@@ -27,9 +35,8 @@ const WorkspaceDetail = () => {
 
   useEffect(() => {
     /**
-     * Fetches the details of a specific workspace from the backend.
-     * @async
      * @function fetchWorkspaceDetails
+     * @description Fetches the details of a specific workspace from the backend.
      * @returns {Promise<void>}
      */
     const fetchWorkspaceDetails = async () => {
@@ -55,10 +62,9 @@ const WorkspaceDetail = () => {
   }, [id]);
 
   /**
-   * Handles adding a new member to the workspace.
-   * @async
    * @function handleAddMember
-   * @param {object} e - The event object from the form submission.
+   * @description Handles adding a new member to the workspace.
+   * @param {React.FormEvent<HTMLFormElement>} e - The event object from the form submission.
    * @returns {Promise<void>}
    */
   const handleAddMember = async (e) => {

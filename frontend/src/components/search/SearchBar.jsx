@@ -1,15 +1,41 @@
+/**
+ * @file SearchBar.jsx
+ * @description This component provides a search bar for searching across the application.
+ * It allows users to search for projects, folders, and pathways.
+ * @module components/search/SearchBar
+ * @requires react
+ * @requires ../../services/api
+ * @requires antd
+ */
+
 import React, { useState } from 'react';
 import api from '../../services/api'; // Use the centralized API service
 import { message } from 'antd'; // Import Ant Design message component
 
+/**
+ * @component SearchBar
+ * @description A component that provides a search bar and displays search results.
+ * @returns {JSX.Element} The search bar and search results.
+ */
 const SearchBar = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState({ projects: [], folders: [], pathways: [] });
 
+  /**
+   * @function onChange
+   * @description Updates the search query state as the user types.
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The change event.
+   */
   const onChange = (e) => {
     setQuery(e.target.value);
   };
 
+  /**
+   * @function onSubmit
+   * @description Submits the search query to the backend and updates the results.
+   * @param {React.FormEvent<HTMLFormElement>} e - The form submission event.
+   * @returns {Promise<void>}
+   */
   const onSubmit = async (e) => {
     e.preventDefault();
     try {

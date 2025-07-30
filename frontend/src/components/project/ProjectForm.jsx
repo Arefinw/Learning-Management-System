@@ -2,6 +2,11 @@
  * @file ProjectForm.jsx
  * @description This file implements the ProjectForm component, used for creating and editing projects using Ant Design.
  * It handles form submission, validation, and interaction with the backend API.
+ * @module components/project/ProjectForm
+ * @requires react
+ * @requires react-router-dom
+ * @requires ../../services/api
+ * @requires antd
  */
 
 import React, { useState, useEffect } from 'react';
@@ -17,7 +22,8 @@ const { Title } = Typography;
 const { Option } = Select;
 
 /**
- * ProjectForm Component
+ * @component ProjectForm
+ * @description A form for creating and editing projects.
  * @param {object} props - The component props.
  * @param {boolean} [props.isEditMode=false] - Whether the form is in edit mode.
  * @returns {JSX.Element} The ProjectForm component.
@@ -36,9 +42,8 @@ const ProjectForm = ({ isEditMode = false }) => {
 
   useEffect(() => {
     /**
-     * Fetches workspaces for the dropdown and project data if in edit mode.
-     * @async
      * @function fetchData
+     * @description Fetches workspaces for the dropdown and project data if in edit mode.
      * @returns {Promise<void>}
      */
     const fetchData = async () => {
@@ -64,9 +69,8 @@ const ProjectForm = ({ isEditMode = false }) => {
   }, [isEditMode, id, form, workspaceIdFromUrl]);
 
   /**
-   * Handles form submission.
-   * @async
    * @function onFinish
+   * @description Handles form submission.
    * @param {object} values - The form values.
    * @returns {Promise<void>}
    */

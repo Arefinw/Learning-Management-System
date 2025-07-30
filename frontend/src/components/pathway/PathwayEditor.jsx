@@ -1,3 +1,18 @@
+/**
+ * @file PathwayEditor.jsx
+ * @description This component provides an interface for editing a pathway.
+ * It allows users to add, remove, reorder, and mark items as complete.
+ * @module components/pathway/PathwayEditor
+ * @requires react
+ * @requires react-router-dom
+ * @requires ../../context/AuthContext
+ * @requires ../../services/api
+ * @requires ../common/Loading
+ * @requires ../common/Error
+ * @requires antd
+ * @requires @ant-design/icons
+ */
+
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { useParams } from 'react-router-dom';
@@ -24,6 +39,11 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 const { confirm } = Modal;
 
+/**
+ * @component PathwayEditor
+ * @description A component for editing the details and items of a pathway.
+ * @returns {JSX.Element} The pathway editor interface.
+ */
 const PathwayEditor = () => {
   const { user } = useContext(AuthContext);
   const { id } = useParams();
@@ -33,6 +53,11 @@ const PathwayEditor = () => {
   const [newItemForm] = Form.useForm();
 
   useEffect(() => {
+    /**
+     * @function fetchPathwayDetails
+     * @description Fetches the details of the pathway from the backend.
+     * @returns {Promise<void>}
+     */
     const fetchPathwayDetails = async () => {
       try {
         const response = await api.get(`/api/pathways/${id}`);
@@ -47,6 +72,12 @@ const PathwayEditor = () => {
     fetchPathwayDetails();
   }, [id]);
 
+  /**
+   * @function handleAddItem
+   * @description Adds a new item to the pathway.
+   * @param {object} values - The form values for the new item.
+   * @returns {Promise<void>}
+   */
   const handleAddItem = async (values) => {
     try {
       const response = await api.post(`/api/pathways/${id}/items`, values);
@@ -58,6 +89,12 @@ const PathwayEditor = () => {
     }
   };
 
+  /**
+   * @function handleRemoveItem
+   * @description Removes an item from the pathway.
+   * @param {string} itemId - The ID of the item to remove.
+   * @returns {Promise<void>}
+   */
   const handleRemoveItem = async (itemId) => {
     try {
       await api.delete(`/api/pathways/${id}/items/${itemId}`);
@@ -71,6 +108,11 @@ const PathwayEditor = () => {
     }
   };
 
+  /**
+   * @function showRemoveConfirm
+   * @description Shows a confirmation modal before removing an item.
+   * @param {object} item - The item to be removed.
+   */
   const showRemoveConfirm = (item) => {
     confirm({
       title: `Do you really want to remove this item?`,
@@ -85,6 +127,12 @@ const PathwayEditor = () => {
     });
   };
 
+  /**
+   * @function handleToggleCompleted
+   * @description Toggles the completed status of a pathway item.
+   * @param {object} item - The item to be updated.
+   * @returns {Promise<void>}
+   */
   const handleToggleCompleted = async (item) => {
     try {
       const updatedItem = { ...item, completed: !item.completed };
@@ -95,6 +143,13 @@ const PathwayEditor = () => {
     }
   };
 
+  /**
+   * @function handleMoveItem
+   * @description Moves an item up or down in the pathway list.
+   * @param {string} itemId - The ID of the item to move.
+   * @param {string} direction - The direction to move the item ('up' or 'down').
+   * @returns {Promise<void>}
+   */
   const handleMoveItem = async (itemId, direction) => {
     try {
       const response = await api.put(`/api/pathways/${id}/items/${itemId}/move`, { direction });
@@ -120,6 +175,12 @@ const PathwayEditor = () => {
     return <Error message="Pathway not found." />;
   }
 
+  /**
+   * @function getItemIcon
+   * @description Returns an icon based on the pathway item type.
+   * @param {string} type - The type of the pathway item.
+   * @returns {JSX.Element}
+   */
   const getItemIcon = (type) => {
     switch (type) {
       case 'Link':

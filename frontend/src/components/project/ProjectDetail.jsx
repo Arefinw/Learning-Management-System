@@ -2,6 +2,15 @@
  * @file ProjectDetail.jsx
  * @description This file implements the ProjectDetail component, which displays the details of a single project using Ant Design.
  * It allows users to view project information, manage folders and pathways within the project.
+ * @module components/project/ProjectDetail
+ * @requires react
+ * @requires react-router-dom
+ * @requires ../../context/AuthContext
+ * @requires ../../services/api
+ * @requires ../common/Loading
+ * @requires ../common/Error
+ * @requires antd
+ * @requires @ant-design/icons
  */
 
 import React, { useState, useEffect, useContext } from 'react';
@@ -20,8 +29,9 @@ const { Content } = Layout;
 const { Title, Text } = Typography;
 
 /**
- * ProjectDetail Component
- * @returns {JSX.Element} The ProjectDetail page.
+ * @component ProjectDetail
+ * @description A component that displays the details of a specific project.
+ * @returns {JSX.Element} The project detail page.
  */
 const ProjectDetail = () => {
   const { id } = useParams();
@@ -35,9 +45,8 @@ const ProjectDetail = () => {
 
   useEffect(() => {
     /**
-     * Fetches the details of a specific project from the backend.
-     * @async
      * @function fetchProjectDetails
+     * @description Fetches the details of a specific project from the backend.
      * @returns {Promise<void>}
      */
     const fetchProjectDetails = async () => {
@@ -55,9 +64,8 @@ const ProjectDetail = () => {
   }, [id]);
 
   /**
-   * Handles the deletion of a folder or pathway within the project.
-   * @async
    * @function handleDeleteItem
+   * @description Handles the deletion of a folder or pathway within the project.
    * @param {string} itemId - The ID of the item to delete.
    * @param {string} itemType - The type of the item (e.g., 'folder' or 'pathway').
    * @returns {Promise<void>}
@@ -80,11 +88,10 @@ const ProjectDetail = () => {
   };
 
   /**
-   * Shows the delete confirmation modal for a folder or pathway.
    * @function showDeleteModal
+   * @description Shows the delete confirmation modal for a folder or pathway.
    * @param {object} item - The item object to delete.
    * @param {string} type - The type of the item (e.g., 'folder' or 'pathway').
-   * @returns {void}
    */
   const showDeleteModal = (item, type) => {
     setItemToDelete(item);

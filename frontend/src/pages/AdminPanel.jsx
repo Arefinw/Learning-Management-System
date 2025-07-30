@@ -1,3 +1,16 @@
+/**
+ * @file AdminPanel.jsx
+ * @description This component provides an admin panel for managing users and workspaces.
+ * It fetches and displays lists of users and workspaces.
+ * @module pages/AdminPanel
+ * @requires react
+ * @requires ../services/api
+ * @requires ../components/common/Loading
+ * @requires ../components/common/Error
+ * @requires antd
+ * @requires @ant-design/icons
+ */
+
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import Loading from '../components/common/Loading';
@@ -10,15 +23,21 @@ import { EditOutlined, UserOutlined, TeamOutlined, SettingOutlined } from '@ant-
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
+/**
+ * @component AdminPanel
+ * @description A component that provides an admin panel for managing the application.
+ * @returns {JSX.Element} The admin panel page.
+ */
 const AdminPanel = () => {
   const [users, setUsers] = useState([]);
   const [workspaces, setWorkspaces] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     /**
-     * Fetches all users and workspaces for the admin panel.
-     * @async
      * @function fetchData
+     * @description Fetches all users and workspaces for the admin panel.
      * @returns {Promise<void>}
      */
     const fetchData = async () => {

@@ -1,11 +1,26 @@
+/**
+ * @file auth.controller.js
+ * @description Defines the controller functions for user authentication.
+ * @module controllers/auth
+ * @requires ../models/User
+ * @requires bcryptjs
+ * @requires jsonwebtoken
+ * @requires ../utils/errorResponse
+ */
+
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const ErrorResponse = require('../utils/errorResponse');
 
-// @desc    Register a new user
-// @route   POST /api/auth/register
-// @access  Public
+/**
+ * @function register
+ * @description Register a new user.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.register = async (req, res, next) => {
   const { name, email, password } = req.body;
 
@@ -47,9 +62,14 @@ exports.register = async (req, res, next) => {
   }
 };
 
-// @desc    Authenticate user & get token
-// @route   POST /api/auth/login
-// @access  Public
+/**
+ * @function login
+ * @description Authenticate user and get token.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.login = async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -86,9 +106,14 @@ exports.login = async (req, res, next) => {
   }
 };
 
-// @desc    Get logged in user
-// @route   GET /api/auth/me
-// @access  Private
+/**
+ * @function getMe
+ * @description Get the logged in user's details.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).select('-password');

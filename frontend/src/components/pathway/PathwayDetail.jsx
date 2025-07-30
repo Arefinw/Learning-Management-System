@@ -1,6 +1,21 @@
+/**
+ * @file PathwayDetail.jsx
+ * @description This component displays the details of a single pathway.
+ * It fetches pathway data from the backend and displays the title, description, and a list of items.
+ * @module components/pathway/PathwayDetail
+ * @requires react
+ * @requires react-router-dom
+ * @requires ../../context/AuthContext
+ * @requires ../../services/api
+ * @requires ../common/Loading
+ * @requires ../common/Error
+ * @requires antd
+ * @requires @ant-design/icons
+ */
+
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import api from '../../services/api';
 import Loading from '../common/Loading';
 import Error from '../common/Error';
@@ -13,6 +28,11 @@ import { EditOutlined, BookOutlined } from '@ant-design/icons';
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
+/**
+ * @component PathwayDetail
+ * @description A component that displays the details of a specific pathway.
+ * @returns {JSX.Element} The pathway detail page.
+ */
 const PathwayDetail = () => {
   const { user } = useContext(AuthContext);
   const { id } = useParams();
@@ -21,6 +41,11 @@ const PathwayDetail = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    /**
+     * @function fetchPathwayDetails
+     * @description Fetches the details of the pathway from the backend.
+     * @returns {Promise<void>}
+     */
     const fetchPathwayDetails = async () => {
       try {
         const response = await api.get(`/api/pathways/${id}`);

@@ -2,6 +2,13 @@
  * @file ProjectList.jsx
  * @description This file implements the ProjectList component, which displays a list of projects using basic HTML.
  * It allows users to view, create, edit, and delete projects.
+ * @module components/project/ProjectList
+ * @requires react
+ * @requires react-router-dom
+ * @requires ../../context/AuthContext
+ * @requires ../../services/api
+ * @requires ../common/Loading
+ * @requires ../common/Error
  */
 
 import React, { useState, useEffect, useContext } from 'react';
@@ -12,7 +19,8 @@ import Loading from '../common/Loading';
 import Error from '../common/Error';
 
 /**
- * ProjectList Component
+ * @component ProjectList
+ * @description A component that displays a list of projects.
  * @returns {JSX.Element} The ProjectList page.
  */
 const ProjectList = () => {
@@ -28,10 +36,9 @@ const ProjectList = () => {
 
   useEffect(() => {
     /**
-     * Fetches the list of projects from the backend.
-     * If a workspaceId is present in the URL, it fetches projects for that specific workspace.
-     * @async
      * @function fetchProjects
+     * @description Fetches the list of projects from the backend.
+     * If a workspaceId is present in the URL, it fetches projects for that specific workspace.
      * @returns {Promise<void>}
      */
     const fetchProjects = async () => {
@@ -53,9 +60,8 @@ const ProjectList = () => {
   }, [workspaceId]);
 
   /**
-   * Handles the deletion of a project.
-   * @async
    * @function handleDelete
+   * @description Handles the deletion of a project.
    * @param {string} id - The ID of the project to delete.
    * @returns {Promise<void>}
    */
@@ -72,10 +78,9 @@ const ProjectList = () => {
   };
 
   /**
-   * Shows the delete confirmation modal.
    * @function showDeleteModal
+   * @description Shows the delete confirmation modal.
    * @param {object} project - The project object to delete.
-   * @returns {void}
    */
   const showDeleteModal = (project) => {
     setProjectToDelete(project);

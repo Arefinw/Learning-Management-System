@@ -1,5 +1,20 @@
+/**
+ * @file Error.jsx
+ * @description This component displays a generic error message.
+ * It is used throughout the application to provide user-friendly feedback when an error occurs.
+ * @module components/common/Error
+ * @requires react
+ */
+
 import React from 'react';
 
+/**
+ * @component Error
+ * @description A simple component to display an error message.
+ * @param {object} props - The component props.
+ * @param {string} [props.message="An unexpected error occurred."] - The error message to display.
+ * @returns {JSX.Element} The error message component.
+ */
 const Error = ({ message = "An unexpected error occurred." }) => {
   return (
     <div style={{

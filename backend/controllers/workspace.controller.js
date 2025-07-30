@@ -1,22 +1,45 @@
+/**
+ * @file workspace.controller.js
+ * @description Defines the controller functions for workspace-related operations.
+ * @module controllers/workspace
+ * @requires ../models/Workspace
+ * @requires ../models/User
+ * @requires ../utils/errorResponse
+ */
+
 const Workspace = require('../models/Workspace');
 const User = require('../models/User'); // Import User model
 const ErrorResponse = require('../utils/errorResponse');
 
-// @desc    Get all workspaces
-// @route   GET /api/workspaces
-// @access  Private
+/**
+ * @function getWorkspaces
+ * @description Get all workspaces for the logged in user.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.getWorkspaces = async (req, res, next) => {
   try {
-    const workspaces = await Workspace.find({ owner: req.user.id }).populate('owner', 'name email').populate('members.user', 'name email');
+    const workspaces = await Workspace.find({
+      $or: [{ owner: req.user.id }, { 'members.user': req.user.id }],
+    })
+      .populate('owner', 'name email')
+      .populate('members.user', 'name email');
     res.status(200).json({ success: true, data: workspaces });
   } catch (err) {
     next(err);
   }
 };
 
-// @desc    Create a workspace
-// @route   POST /api/workspaces
-// @access  Private
+/**
+ * @function createWorkspace
+ * @description Create a new workspace.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.createWorkspace = async (req, res, next) => {
   const { name, description, visibility } = req.body;
 
@@ -29,15 +52,26 @@ exports.createWorkspace = async (req, res, next) => {
     });
 
     const workspace = await newWorkspace.save();
+
+    // Add workspace to user's workspaces array
+    const user = await User.findById(req.user.id);
+    user.workspaces.push(workspace._id);
+    await user.save();
+
     res.status(201).json({ success: true, data: workspace });
   } catch (err) {
     next(err);
   }
 };
 
-// @desc    Get single workspace
-// @route   GET /api/workspaces/:id
-// @access  Private
+/**
+ * @function getWorkspace
+ * @description Get a single workspace by ID.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.getWorkspace = async (req, res, next) => {
   try {
     const workspace = await Workspace.findById(req.params.id)
@@ -49,27 +83,14 @@ exports.getWorkspace = async (req, res, next) => {
       return next(new ErrorResponse('Workspace not found', 404));
     }
 
-    // console.log("workspace", workspace)
-
-    // console.log("workspace's owner", workspace.owner._id.toString())
-    // console.log("user's id", req.user.id)
     // Check authorization based on visibility settings
-    if (workspace.owner._id.toString() === req.user.id) {
-      // OWNER: Always authorized - no further checks needed
-    } else {
-      // NOT OWNER: Check visibility-based access
-      if (workspace.visibility === 'public') {
-        // PUBLIC: Anyone can access - no further checks needed for authenticated users
-      } else if (workspace.visibility === 'private') {
-        // PRIVATE: Only explicit members can access
-        console.log("workspace.members", workspace.members)
-        console.log("req.user.id", req.user.id)
+    if (workspace.owner._id.toString() !== req.user.id) {
+      if (workspace.visibility === 'private') {
         const isExplicitMember = workspace.members.some(member => member.user._id.toString() === req.user.id);
         if (!isExplicitMember) {
           return next(new ErrorResponse('User not authorized to view this workspace', 401));
         }
       } else if (workspace.visibility === 'workspace') {
-        // WORKSPACE: All workspace members can access
         const isWorkspaceMember = workspace.members.some(member => member.user.toString() === req.user.id);
         if (!isWorkspaceMember) {
           return next(new ErrorResponse('User not authorized to view this workspace', 401));
@@ -84,9 +105,14 @@ exports.getWorkspace = async (req, res, next) => {
   }
 };
 
-// @desc    Update workspace
-// @route   PUT /api/workspaces/:id
-// @access  Private
+/**
+ * @function updateWorkspace
+ * @description Update a workspace.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.updateWorkspace = async (req, res, next) => {
   const { name, description, visibility } = req.body;
 
@@ -120,9 +146,14 @@ exports.updateWorkspace = async (req, res, next) => {
   }
 };
 
-// @desc    Delete workspace
-// @route   DELETE /api/workspaces/:id
-// @access  Private
+/**
+ * @function deleteWorkspace
+ * @description Delete a workspace.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.deleteWorkspace = async (req, res, next) => {
   try {
     const workspace = await Workspace.findById(req.params.id);
@@ -144,9 +175,14 @@ exports.deleteWorkspace = async (req, res, next) => {
   }
 };
 
-// @desc    Add member to workspace
-// @route   POST /api/workspaces/:id/members
-// @access  Private
+/**
+ * @function addMember
+ * @description Add a member to a workspace.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
 exports.addMember = async (req, res, next) => {
   try {
     const workspace = await Workspace.findById(req.params.id);

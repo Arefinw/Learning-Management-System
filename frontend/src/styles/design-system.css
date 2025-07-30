@@ -1,3 +1,10 @@
+/**
+ * @file design-system.css
+ * @description This file defines the core design system styles for the application.
+ * It includes styles for typography, links, buttons, forms, cards, and alerts.
+ * @module styles/design-system
+ */
+
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-family: sans-serif; /* Or your chosen heading font */

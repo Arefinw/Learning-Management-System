@@ -1,8 +1,8 @@
-
 /**
- * @fileoverview Ant Design theme configuration for the application.
- * @description This file contains the theme configuration for Ant Design,
- * including the color palette, typography, and other design tokens.
+ * @file theme.js
+ * @description This file contains the theme configuration for Ant Design.
+ * It defines the color palette, typography, and other design tokens.
+ * @module styles/theme
  * @requires antd
  */
 
