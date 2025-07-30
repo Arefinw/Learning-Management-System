@@ -12,6 +12,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import api from '../../services/api';
+import Loading from '../common/Loading';
+
 
 
 // Ant Design Components
