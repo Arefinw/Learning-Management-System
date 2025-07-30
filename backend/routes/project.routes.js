@@ -20,7 +20,7 @@ const {
   deleteFolderFromProject,
   deletePathwayFromProject,
 } = require('../controllers/project.controller');
-const { protect } = require('../middleware/auth.middleware');
+const { protect, authorize } = require('../middleware/auth.middleware');
 
 /**
  * @route   GET /api/projects
@@ -119,6 +119,6 @@ router.route('/:projectId/folders/:folderId').delete(protect, deleteFolderFromPr
  * @throws  { 404 } - Not Found - If project or pathway is not found
  * @throws  { 500 } - Internal Server Error
  */
-router.route('/:projectId/pathways/:pathwayId').delete(protect, deletePathwayFromProject);
+router.route('/:projectId/pathways/:pathwayId').delete(protect, authorize('admin'), deletePathwayFromProject);
 
 module.exports = router;

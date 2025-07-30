@@ -16,6 +16,7 @@ import api from '../services/api';
 
 // Ant Design Components
 import { Row, Col, Card, Statistic, Button, List, Avatar, Typography, Space, Spin, Alert, Divider } from 'antd';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import {
   UserOutlined,
   ProjectOutlined,
@@ -143,6 +144,31 @@ const Dashboard = () => {
             </Card>
           </Col>
         </Row>
+
+        <Card title={<Title level={3} style={{ color: '#6A5ACD' }}>Overview</Title>} style={{ marginBottom: '32px' }}>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={[
+                { name: 'Workspaces', value: dashboardData?.totalWorkspaces || 0 },
+                { name: 'Projects', value: dashboardData?.totalProjects || 0 },
+                { name: 'Completed Pathways', value: dashboardData?.completedPathways || 0 },
+              ]}
+              margin={{
+                top: 5,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="value" fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
 
         {/* Quick Action Buttons */}
         <Card title={<Title level={3} style={{ color: '#6A5ACD' }}>Quick Actions</Title>} style={{ marginBottom: '32px' }}>

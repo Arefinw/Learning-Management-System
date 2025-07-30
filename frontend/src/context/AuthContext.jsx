@@ -34,8 +34,10 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem("token");
     if (token) {
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      console.log("token", localStorage.getItem("token"))
       try {
         const res = await api.get("/api/auth/me");
+        console.log("response", res);
         setIsAuthenticated(true);
         setUser(res.data.data);
       } catch (err) {
@@ -65,8 +67,10 @@ export const AuthProvider = ({ children }) => {
    * @returns {Promise<boolean>} Whether the login was successful.
    */
   const login = async (email, password) => {
+    console.log("It enters this part");
     try {
       const res = await api.post("/api/auth/login", { email, password });
+      console.log("response", res);
       localStorage.setItem("token", res.data.token);
       await checkAuthStatus();
       return true;
@@ -84,7 +88,7 @@ export const AuthProvider = ({ children }) => {
    */
   const register = async (userData) => {
     try {
-      const res = await api.post("/api/auth/register", userData);
+      const res = await api.post("/auth/register", userData);
       localStorage.setItem("token", res.data.token);
       await checkAuthStatus();
       return true;

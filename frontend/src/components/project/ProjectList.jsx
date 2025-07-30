@@ -14,6 +14,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
+import { Layout, Row, Col, Card, Button, List, Modal, Typography, Space, Table, Tag, Empty, Alert, Spin } from 'antd';
+const { Title, Text } = Typography;
+import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import api from '../../services/api';
 import Loading from '../common/Loading';
 import Error from '../common/Error';
@@ -88,118 +91,101 @@ const ProjectList = () => {
   };
 
   if (loading) {
-    return <Loading />;
+    return (
+      <div className="flex justify-center items-center min-h-screen-content">
+        <Spin size="large" tip="Loading Projects..." />
+      </div>
+    );
   }
 
   if (error) {
-    return <Error message={error} />;
+    return (
+      <div className="p-4">
+        <Alert
+          message="Error"
+          description={error}
+          type="error"
+          showIcon
+          closable
+        />
+      </div>
+    );
   }
 
+  const columns = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+      render: (text, record) => <Link to={`/projects/${record._id}`}>{text}</Link>,
+    },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+    },
+    {
+      title: 'Owner',
+      dataIndex: ['owner', 'name'],
+      key: 'owner',
+      render: (text) => text || 'N/A',
+    },
+    {
+      title: 'Workspace',
+      dataIndex: ['workspace', 'name'],
+      key: 'workspace',
+      render: (text, record) => record.workspace ? <Link to={`/workspaces/${record.workspace._id}`}>{text}</Link> : 'N/A',
+    },
+    {
+      title: 'Visibility',
+      dataIndex: 'visibility',
+      key: 'visibility',
+      render: (visibility) => (
+        <Tag color={visibility === 'private' ? 'red' : visibility === 'public' ? 'green' : 'blue'}>
+          {visibility.toUpperCase()}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_, record) => (
+        <Space size="middle">
+          <Link to={`/projects/${record._id}/edit`}>
+            <Button type="text" icon={<EditOutlined />} />
+          </Link>
+          <Button type="text" danger icon={<DeleteOutlined />} onClick={() => showDeleteConfirmModal(record)} />
+        </Space>
+      ),
+    },
+  ];
+
   return (
-    <div style={{ padding: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ color: '#333333' }}>Projects {workspaceId && `for Workspace ${workspaceId}`}</h2>
-        <Link to={workspaceId ? `/projects/new?workspaceId=${workspaceId}` : "/projects/new"}>
-          <button style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-            Create New Project
-          </button>
-        </Link>
-      </div>
+    <Layout className="p-16 bg-transparent">
+      <Layout.Content>
+        <Row justify="space-between" align="middle" style={{ marginBottom: '32px' }}>
+          <Col>
+            <Title level={2} style={{ color: '#333333' }}>Projects {workspaceId && `for Workspace ${workspaceId}`}</Title>
+          </Col>
+          <Col>
+            <Link to={workspaceId ? `/projects/new?workspaceId=${workspaceId}` : "/projects/new"}>
+              <Button type="primary" size="large" icon={<PlusOutlined />}>Create New Project</Button>
+            </Link>
+          </Col>
+        </Row>
 
-      {projects.length === 0 ? (
-        <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px', backgroundColor: '#fff' }}>
-          <p style={{ color: '#6b7280' }}>No projects found. Create one to get started!</p>
-        </div>
-      ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#f2f2f2' }}>
-              <th style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'left' }}>Name</th>
-              <th style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'left' }}>Description</th>
-              <th style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'left' }}>Owner</th>
-              <th style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'left' }}>Workspace</th>
-              <th style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'left' }}>Visibility</th>
-              <th style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'left' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {projects.map((record) => (
-              <tr key={record._id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: '10px', border: '1px solid #ddd' }}><Link to={`/projects/${record._id}`}>{record.name}</Link></td>
-                <td style={{ padding: '10px', border: '1px solid #ddd' }}>{record.description}</td>
-                <td style={{ padding: '10px', border: '1px solid #ddd' }}>{record.owner?.name || 'N/A'}</td>
-                <td style={{ padding: '10px', border: '1px solid #ddd' }}>{record.workspace ? <Link to={`/workspaces/${record.workspace._id}`}>{record.workspace.name}</Link> : 'N/A'}</td>
-                <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                  <span style={{
-                    backgroundColor: record.visibility === 'private' ? '#ffeded' : record.visibility === 'public' ? '#edfff1' : '#f0f8ff',
-                    color: record.visibility === 'private' ? '#d32f2f' : record.visibility === 'public' ? '#2e7d32' : '#1976d2',
-                    padding: '5px 10px',
-                    borderRadius: '5px',
-                    fontSize: '0.8em',
-                  }}>
-                    {record.visibility.toUpperCase()}
-                  </span>
-                </td>
-                <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <Link to={`/projects/${record._id}/edit`}>
-                      <button style={{ padding: '5px 10px', backgroundColor: '#ffc107', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Edit</button>
-                    </Link>
-                    <button
-                      onClick={() => showDeleteModal(record)}
-                      style={{ padding: '5px 10px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {showDeleteConfirm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000,
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-            width: '400px',
-            textAlign: 'center',
-          }}>
-            <h4 style={{ color: '#333', marginBottom: '15px' }}>Confirm Delete</h4>
-            <p style={{ color: '#374151', marginBottom: '20px' }}>Are you sure you want to delete the project "<span style={{ fontWeight: 'bold' }}>{projectToDelete?.name}</span>"? This action cannot be undone.</p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
-              <button
-                onClick={() => handleDelete(projectToDelete._id)}
-                style={{ padding: '10px 15px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-              >
-                Delete
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                style={{ padding: '10px 15px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+        {projects.length === 0 ? (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={
+              <Text type="secondary" style={{ color: '#6b7280' }}>No projects found. Create one to get started!</Text>
+            }
+          />
+        ) : (
+          <Table columns={columns} dataSource={projects} rowKey="_id" pagination={{ pageSize: 10 }} />
+        )}
+      </Layout.Content>
+    </Layout>
   );
 };
 

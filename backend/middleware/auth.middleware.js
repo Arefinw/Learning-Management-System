@@ -5,7 +5,6 @@ const ErrorResponse = require('../utils/errorResponse');
 // Protect routes
 exports.protect = async (req, res, next) => {
   let token;
-  // console.log("Token: ", req.headers.authorization);
 
   if (
     req.headers.authorization &&
@@ -14,24 +13,34 @@ exports.protect = async (req, res, next) => {
     token = req.headers.authorization.split(' ')[1];
   }
 
-  // Make sure token exists
   if (!token) {
     return next(new ErrorResponse('Not authorized to access this route', 401));
   }
 
   try {
-    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
     req.user = await User.findById(decoded.user.id);
-
     next();
   } catch (err) {
     if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
       return next(new ErrorResponse('Not authorized to access this route', 401));
     } else {
-      // This could be a database error or other unexpected error
       return next(new ErrorResponse(`Authentication failed: ${err.message}`, 500));
     }
   }
+};
+
+// Grant access to specific roles
+exports.authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new ErrorResponse(
+          `User role ${req.user.role} is not authorized to access this route`,
+          403
+        )
+      );
+    }
+    next();
+  };
 };

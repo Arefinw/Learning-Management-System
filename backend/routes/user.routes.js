@@ -9,8 +9,8 @@
 
 const express = require('express');
 const router = express.Router();
-const { getUsers, getUser, updateUser } = require('../controllers/user.controller');
-const { protect } = require('../middleware/auth.middleware');
+const { getUsers, getUser, updateUser, deleteUser } = require('../controllers/user.controller');
+const { protect, authorize } = require('../middleware/auth.middleware');
 
 /**
  * @route   GET /api/users
@@ -21,7 +21,7 @@ const { protect } = require('../middleware/auth.middleware');
  * @throws  { 403 } - Forbidden - If user is not an admin
  * @throws  { 500 } - Internal Server Error
  */
-router.route('/').get(protect, getUsers);
+router.route('/').get(protect, authorize('admin'), getUsers);
 
 /**
  * @route   GET /api/users/:id
@@ -43,6 +43,6 @@ router.route('/').get(protect, getUsers);
  * @throws  { 404 } - Not Found - If user is not found
  * @throws  { 500 } - Internal Server Error
  */
-router.route('/:id').get(protect, getUser).put(protect, updateUser);
+router.route('/:id').get(protect, getUser).put(protect, updateUser).delete(protect, authorize('admin'), deleteUser);
 
 module.exports = router;

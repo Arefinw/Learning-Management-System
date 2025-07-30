@@ -72,6 +72,28 @@ const PathwayDetail = () => {
     return <Error message="Pathway not found." />;
   }
 
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  /**
+   * @function showItemModal
+   * @description Opens the modal to display the content viewer for a selected item.
+   * @param {object} item - The item to be displayed.
+   */
+  const showItemModal = (item) => {
+    setSelectedItem(item);
+    setIsModalVisible(true);
+  };
+
+  /**
+   * @function handleCancelModal
+   * @description Closes the content viewer modal.
+   */
+  const handleCancelModal = () => {
+    setIsModalVisible(false);
+    setSelectedItem(null);
+  };
+
   return (
     <Layout className="p-16 bg-transparent">
       <Content>
@@ -93,7 +115,11 @@ const PathwayDetail = () => {
                   <List.Item style={{ padding: '16px 0' }}>
                     <List.Item.Meta
                       avatar={<BookOutlined style={{ color: '#6A5ACD', fontSize: '20px' }} />}
-                      title={<Text strong>{item.type}: {item.content}</Text>}
+                      title={
+                        <a onClick={() => showItemModal(item)} style={{ cursor: 'pointer' }}>
+                          <Text strong>{item.type}: {item.content.title || item.content.url || item.content.name || item.content}</Text>
+                        </a>
+                      }
                       description={<Text type="secondary">Completed: {item.completed ? 'Yes' : 'No'}</Text>}
                     />
                   </List.Item>
@@ -104,6 +130,18 @@ const PathwayDetail = () => {
             )}
           </Card>
         </Space>
+
+        <Modal
+          title={selectedItem ? `${selectedItem.type} Content` : 'Content'}
+          open={isModalVisible}
+          onCancel={handleCancelModal}
+          footer={null}
+          width={800}
+        >
+          {selectedItem && (
+            <ContentViewer itemType={selectedItem.type} itemId={selectedItem.content._id} />
+          )}
+        </Modal>
       </Content>
     </Layout>
   );

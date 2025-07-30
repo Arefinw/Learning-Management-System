@@ -77,28 +77,29 @@ exports.getWorkspace = async (req, res, next) => {
     const workspace = await Workspace.findById(req.params.id)
       .populate('owner', 'name email')
       .populate('members.user', 'name email')
-      .populate('projects'); // Populate projects to display in workspace detail
+      .populate('projects');
 
     if (!workspace) {
       return next(new ErrorResponse('Workspace not found', 404));
     }
 
-    // Check authorization based on visibility settings
-    if (workspace.owner._id.toString() !== req.user.id) {
-      if (workspace.visibility === 'private') {
-        const isExplicitMember = workspace.members.some(member => member.user._id.toString() === req.user.id);
-        if (!isExplicitMember) {
-          return next(new ErrorResponse('User not authorized to view this workspace', 401));
-        }
-      } else if (workspace.visibility === 'workspace') {
-        const isWorkspaceMember = workspace.members.some(member => member.user.toString() === req.user.id);
-        if (!isWorkspaceMember) {
-          return next(new ErrorResponse('User not authorized to view this workspace', 401));
-        }
-      }
+    // Check authorization: owner can always access
+    if (workspace.owner._id.toString() === req.user.id) {
+      return res.status(200).json({ success: true, data: workspace });
     }
 
+    // Check if user is a member for private/workspace visibility
+    const isMember = workspace.members.some(member => member.user._id.toString() === req.user.id);
 
+    if (workspace.visibility === 'private' && !isMember) {
+      return next(new ErrorResponse('User not authorized to view this workspace', 401));
+    }
+
+    if (workspace.visibility === 'workspace' && !isMember) {
+      return next(new ErrorResponse('User not authorized to view this workspace', 401));
+    }
+
+    // Public workspaces are accessible by anyone (if not caught by previous checks)
     res.status(200).json({ success: true, data: workspace });
   } catch (err) {
     next(err);
@@ -229,6 +230,91 @@ exports.addMember = async (req, res, next) => {
       .populate('projects');
 
     res.status(200).json({ success: true, data: updatedWorkspace });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * @function removeMember
+ * @description Remove a member from a workspace.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
+exports.removeMember = async (req, res, next) => {
+  try {
+    const workspace = await Workspace.findById(req.params.id);
+
+    if (!workspace) {
+      return next(new ErrorResponse('Workspace not found', 404));
+    }
+
+    // Check for user
+    if (workspace.owner.toString() !== req.user.id) {
+      return next(new ErrorResponse('User not authorized', 401));
+    }
+
+    const memberIndex = workspace.members.findIndex(member => member.user.toString() === req.params.memberId);
+
+    if (memberIndex === -1) {
+      return next(new ErrorResponse('Member not found in this workspace', 404));
+    }
+
+    // Prevent owner from removing themselves
+    if (workspace.members[memberIndex].user.toString() === req.user.id) {
+      return next(new ErrorResponse('Cannot remove yourself from the workspace', 400));
+    }
+
+    const removedMemberId = workspace.members[memberIndex].user;
+    workspace.members.splice(memberIndex, 1);
+
+    await workspace.save();
+
+    // Remove workspace from the user's workspaces array
+    await User.findByIdAndUpdate(removedMemberId, { $pull: { workspaces: workspace._id } });
+
+    res.status(200).json({ success: true, message: 'Member removed from workspace' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * @function updateMemberRole
+ * @description Update a member's role in a workspace.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
+exports.updateMemberRole = async (req, res, next) => {
+  try {
+    const workspace = await Workspace.findById(req.params.id);
+
+    if (!workspace) {
+      return next(new ErrorResponse('Workspace not found', 404));
+    }
+
+    // Check for user
+    if (workspace.owner.toString() !== req.user.id) {
+      return next(new ErrorResponse('User not authorized', 401));
+    }
+
+    const { role } = req.body;
+
+    const member = workspace.members.find(member => member.user.toString() === req.params.memberId);
+
+    if (!member) {
+      return next(new ErrorResponse('Member not found in this workspace', 404));
+    }
+
+    member.role = role;
+
+    await workspace.save();
+
+    res.status(200).json({ success: true, message: 'Member role updated', data: workspace });
   } catch (err) {
     next(err);
   }

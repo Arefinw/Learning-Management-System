@@ -76,23 +76,45 @@ const AdminPanel = () => {
 
         <section style={{ marginBottom: '32px' }}>
           <Card title={<Title level={3} style={{ color: '#6A5ACD' }}>User Management</Title>}>
-            <List
-              itemLayout="horizontal"
+            <Table
               dataSource={users}
-              renderItem={(user) => (
-                <List.Item
-                  actions={[
-                    <Button type="text" icon={<EditOutlined />} style={{ color: '#4b5563' }} />,
-                  ]}
-                  style={{ padding: '16px 0' }}
-                >
-                  <List.Item.Meta
-                    avatar={<UserOutlined style={{ color: '#6A5ACD', fontSize: '20px' }} />}
-                    title={<Text strong>{user.name}</Text>}
-                    description={<Text type="secondary">{user.email} - {user.role}</Text>}
-                  />
-                </List.Item>
-              )}
+              rowKey="_id"
+              columns={[
+                { title: 'Name', dataIndex: 'name', key: 'name' },
+                { title: 'Email', dataIndex: 'email', key: 'email' },
+                {
+                  title: 'Role',
+                  dataIndex: 'role',
+                  key: 'role',
+                  render: (text, record) => (
+                    <Select
+                      defaultValue={text}
+                      style={{ width: 120 }}
+                      onChange={(value) => handleUpdateUserRole(record._id, value)}
+                    >
+                      <Option value="user">User</Option>
+                      <Option value="admin">Admin</Option>
+                    </Select>
+                  ),
+                },
+                {
+                  title: 'Actions',
+                  key: 'actions',
+                  render: (_, record) => (
+                    <Space size="middle">
+                      <Popconfirm
+                        title="Are you sure to delete this user?"
+                        onConfirm={() => handleDeleteUser(record._id)}
+                        okText="Yes"
+                        cancelText="No"
+                      >
+                        <Button type="text" danger icon={<DeleteOutlined />} />
+                      </Popconfirm>
+                    </Space>
+                  ),
+                },
+              ]}
+              pagination={{ pageSize: 10 }}
             />
           </Card>
         </section>

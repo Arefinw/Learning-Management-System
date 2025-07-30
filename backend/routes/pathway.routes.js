@@ -16,6 +16,7 @@ const {
   updatePathway,
   deletePathway,
   addItem,
+  updateItemCompletionStatus,
 } = require('../controllers/pathway.controller');
 const { protect } = require('../middleware/auth.middleware');
 
@@ -86,5 +87,17 @@ router
  * @throws  { 500 } - Internal Server Error
  */
 router.route('/:id/items').post(protect, addItem);
+
+/**
+ * @route   PUT /api/pathways/:pathwayId/items/:itemId/complete
+ * @desc    Update the completion status of a pathway item
+ * @access  Private (Owner)
+ * @body    { "completed": true }
+ * @returns { Pathway }
+ * @throws  { 401 } - Unauthorized - If token is not valid or user is not the owner
+ * @throws  { 404 } - Not Found - If pathway or item is not found
+ * @throws  { 500 } - Internal Server Error
+ */
+router.route('/:pathwayId/items/:itemId/complete').put(protect, updateItemCompletionStatus);
 
 module.exports = router;

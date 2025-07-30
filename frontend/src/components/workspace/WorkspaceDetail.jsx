@@ -14,7 +14,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
-import api from '../../services/api';
+import { getWorkspaceById, addWorkspaceMember, removeWorkspaceMember, updateWorkspaceMemberRole } from '../../services/workspace';
 import Loading from '../common/Loading';
 import Error from '../common/Error';
 
@@ -32,6 +32,9 @@ const WorkspaceDetail = () => {
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberRole, setNewMemberRole] = useState('member');
+  const [showEditMemberRoleModal, setShowEditMemberRoleModal] = useState(false);
+  const [memberToEdit, setMemberToEdit] = useState(null);
+  const [editMemberRole, setEditMemberRole] = useState('');
 
   useEffect(() => {
     /**
@@ -45,10 +48,9 @@ const WorkspaceDetail = () => {
 
       try {
         console.log("fetching workspace details", id);
-        const response = await api.get(`/api/workspaces/${id}`);
+        const response = await getWorkspaceById(id);
 
-        console.log("response", response);
-        setWorkspace(response.data.data);
+        setWorkspace(response.data);
         setLoading(false);
         console.log('WorkspaceDetail: Successfully fetched workspace details.'); // Added log
       } catch (err) {
@@ -70,8 +72,8 @@ const WorkspaceDetail = () => {
   const handleAddMember = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post(`/api/workspaces/${id}/members`, { email: newMemberEmail, role: newMemberRole });
-      setWorkspace(response.data.data); // Update workspace with new member list
+      const response = await addWorkspaceMember(id, { email: newMemberEmail, role: newMemberRole });
+      setWorkspace(response.data); // Update workspace with new member list
       setNewMemberEmail('');
       setNewMemberRole('member');
       setShowAddMemberModal(false);
@@ -93,15 +95,25 @@ const WorkspaceDetail = () => {
     return <Error message="Workspace not found." />;
   }
 
+  const isOwner = user && workspace.owner && user._id === workspace.owner._id;
+  const isMember = user && workspace.members.some(member => member.user._id === user._id);
+  const memberRole = isMember ? workspace.members.find(member => member.user._id === user._id).role : null;
+
+  const canEditWorkspace = isOwner;
+  const canAddMembers = isOwner;
+  const canCreateProject = isOwner || (isMember && (memberRole === 'admin' || memberRole === 'editor'));
+
   return (
     <div style={{ padding: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2 style={{ color: '#333333' }}>{workspace.name}</h2>
-        <Link to={`/workspaces/${workspace._id}/edit`}>
-          <button style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-            Edit Workspace
-          </button>
-        </Link>
+        {canEditWorkspace && (
+          <Link to={`/workspaces/${workspace._id}/edit`}>
+            <button style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+              Edit Workspace
+            </button>
+          </Link>
+        )}
       </div>
 
       <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px', backgroundColor: '#fff', marginBottom: '20px' }}>
@@ -115,12 +127,14 @@ const WorkspaceDetail = () => {
       <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px', backgroundColor: '#fff', marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
           <h3 style={{ color: '#6A5ACD' }}>Members</h3>
-          <button
-            onClick={() => setShowAddMemberModal(true)}
-            style={{ padding: '8px 12px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-          >
-            Add Member
-          </button>
+          {canAddMembers && (
+            <button
+              onClick={() => setShowAddMemberModal(true)}
+              style={{ padding: '8px 12px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+            >
+              Add Member
+            </button>
+          )}
         </div>
         {workspace.members && workspace.members.length > 0 ? (
           <ul style={{ listStyle: 'none', padding: 0 }}>
@@ -138,11 +152,13 @@ const WorkspaceDetail = () => {
       <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px', backgroundColor: '#fff' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
           <h3 style={{ color: '#6A5ACD' }}>Projects</h3>
-          <Link to={`/projects/new?workspaceId=${workspace._id}`}>
-            <button style={{ padding: '8px 12px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-              Create New Project
-            </button>
-          </Link>
+          {canCreateProject && (
+            <Link to={`/projects/new?workspaceId=${workspace._id}`}>
+              <button style={{ padding: '8px 12px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+                Create New Project
+              </button>
+            </Link>
+          )}
         </div>
         {workspace.projects && workspace.projects.length > 0 ? (
           <ul style={{ listStyle: 'none', padding: 0 }}>
@@ -221,6 +237,63 @@ const WorkspaceDetail = () => {
                   style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
                 >
                   Add Member
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditMemberRoleModal && memberToEdit && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+            width: '400px',
+            textAlign: 'left',
+          }}>
+            <h4 style={{ color: '#333', marginBottom: '15px' }}>Edit Role for {memberToEdit.user.name}</h4>
+            <form onSubmit={handleUpdateMemberRole}>
+              <div style={{ marginBottom: '15px' }}>
+                <label htmlFor="editMemberRole" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Role</label>
+                <select
+                  id="editMemberRole"
+                  value={editMemberRole}
+                  onChange={(e) => setEditMemberRole(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                  required
+                >
+                  <option value="member">Member</option>
+                  <option value="editor">Editor</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowEditMemberRoleModal(false)}
+                  style={{ padding: '10px 15px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                >
+                  Update Role
                 </button>
               </div>
             </form>

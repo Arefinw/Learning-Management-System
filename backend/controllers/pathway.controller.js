@@ -7,6 +7,11 @@
  */
 
 const Pathway = require('../models/Pathway');
+const Project = require('../models/Project');
+const Folder = require('../models/Folder');
+const Link = require('../models/Link');
+const Video = require('../models/Video');
+const Document = require('../models/Document');
 const ErrorResponse = require('../utils/errorResponse');
 
 /**
@@ -149,18 +154,95 @@ exports.addItem = async (req, res, next) => {
       return next(new ErrorResponse('Pathway not found', 404));
     }
 
-    const { type, content } = req.body;
+    const { type, itemData } = req.body;
+    let newContent;
+
+    switch (type) {
+      case 'Link':
+        newContent = new Link(itemData);
+        await newContent.save();
+        break;
+      case 'Video':
+        newContent = new Video(itemData);
+        await newContent.save();
+        break;
+      case 'Document':
+        newContent = new Document(itemData);
+        await newContent.save();
+        break;
+      default:
+        return next(new ErrorResponse('Invalid item type', 400));
+    }
 
     const newItem = {
       type,
-      content,
+      content: newContent._id, // Store the ID of the newly created content
     };
 
     pathway.items.unshift(newItem);
 
     await pathway.save();
 
-    res.status(200).json({ success: true, data: pathway.items });
+    // Populate the newly added item to return full details
+    const updatedPathway = await Pathway.findById(req.params.id).populate({
+      path: 'items.content',
+      model: type, // Dynamically populate based on the type
+    });
+
+
+    res.status(200).json({ success: true, data: updatedPathway });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * @function updateItemCompletionStatus
+ * @description Update the completion status of a pathway item.
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @param {import('express').NextFunction} next - The Express next middleware function.
+ * @returns {Promise<void>}
+ */
+exports.updateItemCompletionStatus = async (req, res, next) => {
+  try {
+    const { pathwayId, itemId } = req.params;
+    const { completed } = req.body;
+
+    const pathway = await Pathway.findById(pathwayId)
+      .populate('project', 'owner')
+      .populate('folder', 'project');
+
+    if (!pathway) {
+      return next(new ErrorResponse('Pathway not found', 404));
+    }
+
+    // Authorization check
+    let authorized = false;
+    if (pathway.project && pathway.project.owner.toString() === req.user.id) {
+      authorized = true;
+    } else if (pathway.folder) {
+      const parentFolder = await Folder.findById(pathway.folder).populate('project', 'owner');
+      if (parentFolder && parentFolder.project.owner.toString() === req.user.id) {
+        authorized = true;
+      }
+    }
+
+    if (!authorized) {
+      return next(new ErrorResponse('Not authorized to update this item', 401));
+    }
+
+    const item = pathway.items.id(itemId);
+
+    if (!item) {
+      return next(new ErrorResponse('Item not found in pathway', 404));
+    }
+
+    item.completed = completed;
+
+    await pathway.save();
+
+    res.status(200).json({ success: true, data: pathway });
   } catch (err) {
     next(err);
   }

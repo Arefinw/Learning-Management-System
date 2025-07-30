@@ -16,6 +16,8 @@ const {
   updateWorkspace,
   deleteWorkspace,
   addMember,
+  updateMemberRole,
+  removeMember,
 } = require('../controllers/workspace.controller');
 const { protect } = require('../middleware/auth.middleware');
 
@@ -87,5 +89,6 @@ router
  * @throws  { 500 } - Internal Server Error
  */
 router.route('/:id/members').post(protect, addMember);
+router.route('/:id/members/:memberId').delete(protect, removeMember).put(protect, updateMemberRole);
 
 module.exports = router;

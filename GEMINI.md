@@ -95,7 +95,7 @@ lms-project/
 │   │   ├── components/
 │   │   │   ├── layout/
 │   │   │   │   ├── Header.jsx
-│   │   │   │   ├── Sidebar.jsx
+
 │   │   │   │   └── Footer.jsx
 │   │   │   ├── auth/
 │   │   │   │   ├── Login.jsx

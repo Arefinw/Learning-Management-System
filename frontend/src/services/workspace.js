@@ -35,7 +35,8 @@ export const createWorkspace = async (workspaceData) => {
  * @returns {Promise<object>} The response data.
  */
 export const getWorkspaceById = async (id) => {
-  const res = await api.get(`/workspaces/${id}`);
+  const res = await api.get(`api/workspaces/${id}`);
+  console.log("response blah blah: ", res);
   return res.data;
 };
 
@@ -71,5 +72,30 @@ export const deleteWorkspace = async (id) => {
  */
 export const addWorkspaceMember = async (id, memberData) => {
   const res = await api.post(`/workspaces/${id}/members`, memberData);
+  return res.data;
+};
+
+/**
+ * @function removeWorkspaceMember
+ * @description Removes a member from a workspace.
+ * @param {string} workspaceId - The ID of the workspace.
+ * @param {string} memberId - The ID of the member to remove.
+ * @returns {Promise<object>} The response data.
+ */
+export const removeWorkspaceMember = async (workspaceId, memberId) => {
+  const res = await api.delete(`/workspaces/${workspaceId}/members/${memberId}`);
+  return res.data;
+};
+
+/**
+ * @function updateWorkspaceMemberRole
+ * @description Updates a member's role in a workspace.
+ * @param {string} workspaceId - The ID of the workspace.
+ * @param {string} memberId - The ID of the member to update.
+ * @param {object} roleData - The new role data.
+ * @returns {Promise<object>} The response data.
+ */
+export const updateWorkspaceMemberRole = async (workspaceId, memberId, roleData) => {
+  const res = await api.put(`/workspaces/${workspaceId}/members/${memberId}`, roleData);
   return res.data;
 };

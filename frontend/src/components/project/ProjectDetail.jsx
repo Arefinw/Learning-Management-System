@@ -111,6 +111,8 @@ const ProjectDetail = () => {
     return <Error message="Project not found." />;
   }
 
+  const isOwner = user && project.owner && user._id === project.owner._id;
+
   return (
     <Layout className="p-16 bg-transparent">
       <Content>
@@ -119,9 +121,11 @@ const ProjectDetail = () => {
             <Title level={2} style={{ color: '#333333' }}>{project.name}</Title>
           </Col>
           <Col>
-            <Link to={`/projects/${project._id}/edit`}>
-              <Button type="primary" icon={<EditOutlined />}>Edit Project</Button>
-            </Link>
+            {isOwner && (
+              <Link to={`/projects/${project._id}/edit`}>
+                <Button type="primary" icon={<EditOutlined />}>Edit Project</Button>
+              </Link>
+            )}
           </Col>
         </Row>
 
@@ -142,9 +146,9 @@ const ProjectDetail = () => {
         <Card
           title={<Title level={3} style={{ color: '#6A5ACD' }}>Folders</Title>}
           extra={
-            <Link to={`/projects/${project._id}/folders/new`}>
-              <Button type="primary" icon={<PlusOutlined />}>Create New Folder</Button>
-            </Link>
+            isOwner && (
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => setShowCreateFolderModal(true)}>Create New Folder</Button>
+            )
           }
           style={{ marginBottom: '32px' }}
         >
@@ -155,8 +159,8 @@ const ProjectDetail = () => {
               renderItem={(folder) => (
                 <List.Item
                   actions={[
-                    <Link to={`/folders/${folder._id}/edit`}><Button type="text" icon={<EditOutlined />} style={{ color: '#4b5563' }} /></Link>,
-                    <Button type="text" danger icon={<DeleteOutlined />} onClick={() => showDeleteModal(folder, 'folder')} />,
+                    isOwner && <Link to={`/folders/${folder._id}/edit`}><Button type="text" icon={<EditOutlined />} style={{ color: '#4b5563' }} /></Link>,
+                    isOwner && <Button type="text" danger icon={<DeleteOutlined />} onClick={() => showDeleteModal(folder, 'folder')} />,
                   ]}
                   style={{ padding: '16px 0' }}
                 >
@@ -177,9 +181,11 @@ const ProjectDetail = () => {
         <Card
           title={<Title level={3} style={{ color: '#6A5ACD' }}>Pathways</Title>}
           extra={
-            <Link to={`/projects/${project._id}/pathways/new`}>
-              <Button type="primary" icon={<PlusOutlined />}>Create New Pathway</Button>
-            </Link>
+            isOwner && (
+              <Link to={`/projects/${project._id}/pathways/new`}>
+                <Button type="primary" icon={<PlusOutlined />}>Create New Pathway</Button>
+              </Link>
+            )
           }
         >
           {project.pathways && project.pathways.length > 0 ? (
@@ -189,8 +195,8 @@ const ProjectDetail = () => {
               renderItem={(pathway) => (
                 <List.Item
                   actions={[
-                    <Link to={`/pathways/${pathway._id}/edit`}><Button type="text" icon={<EditOutlined />} style={{ color: '#4b5563' }} /></Link>,
-                    <Button type="text" danger icon={<DeleteOutlined />} onClick={() => showDeleteModal(pathway, 'pathway')} />,
+                    isOwner && <Link to={`/pathways/${pathway._id}/edit`}><Button type="text" icon={<EditOutlined />} style={{ color: '#4b5563' }} /></Link>,
+                    isOwner && <Button type="text" danger icon={<DeleteOutlined />} onClick={() => showDeleteModal(pathway, 'pathway')} />,
                   ]}
                   style={{ padding: '16px 0' }}
                 >

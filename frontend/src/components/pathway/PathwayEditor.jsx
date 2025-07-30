@@ -135,8 +135,8 @@ const PathwayEditor = () => {
    */
   const handleToggleCompleted = async (item) => {
     try {
-      const updatedItem = { ...item, completed: !item.completed };
-      const response = await api.put(`/api/pathways/${id}/items/${item._id}`, updatedItem);
+      const newCompletedStatus = !item.completed;
+      const response = await api.put(`/api/pathways/${id}/items/${item._id}/complete`, { completed: newCompletedStatus });
       setPathway(response.data.data); // Backend should return updated pathway
     } catch (err) {
       Modal.error({ content: err.response?.data?.message || err.message });
@@ -175,6 +175,11 @@ const PathwayEditor = () => {
     return <Error message="Pathway not found." />;
   }
 
+  const isOwner = user && (
+    (pathway.project && pathway.project.owner && user._id === pathway.project.owner._id) ||
+    (pathway.folder && pathway.folder.project && pathway.folder.project.owner && user._id === pathway.folder.project.owner._id)
+  );
+
   /**
    * @function getItemIcon
    * @description Returns an icon based on the pathway item type.
@@ -208,21 +213,21 @@ const PathwayEditor = () => {
               renderItem={(item, index) => (
                 <List.Item
                   actions={[
-                    <Button
+                    isOwner && <Button
                       type="text"
                       icon={<UpOutlined />}
                       onClick={() => handleMoveItem(item._id, 'up')}
                       disabled={index === 0}
                       style={{ color: '#4b5563' }}
                     />,
-                    <Button
+                    isOwner && <Button
                       type="text"
                       icon={<DownOutlined />}
                       onClick={() => handleMoveItem(item._id, 'down')}
                       disabled={index === pathway.items.length - 1}
                       style={{ color: '#4b5563' }}
                     />,
-                    <Button
+                    isOwner && <Button
                       type="text"
                       danger
                       icon={<DeleteOutlined />}
@@ -232,7 +237,7 @@ const PathwayEditor = () => {
                   style={{ padding: '16px 0' }}
                 >
                   <List.Item.Meta
-                    avatar={<Checkbox checked={item.completed} onChange={() => handleToggleCompleted(item)} />}
+                    avatar={isOwner ? <Checkbox checked={item.completed} onChange={() => handleToggleCompleted(item)} /> : <Checkbox checked={item.completed} disabled />}
                     title={<Text strong>{getItemIcon(item.type)} {item.type}: {item.content}</Text>}
                     description={<Text type="secondary">{item.description}</Text>}
                   />
@@ -244,41 +249,91 @@ const PathwayEditor = () => {
           )}
         </Card>
 
-        <Card>
-          <Title level={3} style={{ color: '#6A5ACD' }}>Add New Item</Title>
-          <Form form={newItemForm} onFinish={handleAddItem} layout="vertical" style={{ gap: '16px' }}>
-            <Form.Item
-              name="type"
-              label={<span style={{ color: '#374151' }}>Item Type</span>}
-              rules={[{ required: true, message: 'Please select an item type!' }]}
-              initialValue="Link"
-            >
-              <Select size="large">
-                <Option value="Link">Link</Option>
-                <Option value="Video">Video</Option>
-                <Option value="Document">Document</Option>
-              </Select>
-            </Form.Item>
-            <Form.Item
-              name="content"
-              label={<span style={{ color: '#374151' }}>Content</span>}
-              rules={[{ required: true, message: 'Please input content!' }]}
-            >
-              <Input.TextArea rows={4} size="large" placeholder="Content URL, ID, or Markdown" />
-            </Form.Item>
-            <Form.Item
-              name="description"
-              label={<span style={{ color: '#374151' }}>Description (Optional)</span>}
-            >
-              <Input.TextArea rows={2} size="large" placeholder="Brief description of the item" />
-            </Form.Item>
-            <Form.Item style={{ marginBottom: '0' }}>
-              <Button type="primary" htmlType="submit" size="large" icon={<PlusOutlined />}>
-                Add Item
-              </Button>
-            </Form.Item>
-          </Form>
-        </Card>
+        {isOwner && (
+          <Card>
+            <Title level={3} style={{ color: '#6A5ACD' }}>Add New Item</Title>
+            <Form form={newItemForm} onFinish={handleAddItem} layout="vertical" style={{ gap: '16px' }}>
+              <Form.Item
+                name="type"
+                label={<span style={{ color: '#374151' }}>Item Type</span>}
+                rules={[{ required: true, message: 'Please select an item type!' }]}
+                initialValue="Link"
+              >
+                <Select size="large" onChange={setSelectedItemType}>
+                  <Option value="Link">Link</Option>
+                  <Option value="Video">Video</Option>
+                  <Option value="Document">Document</Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item
+                name="title"
+                label={<span style={{ color: '#374151' }}>Title</span>}
+                rules={[{ required: true, message: 'Please input the title!' }]}
+              >
+                <Input size="large" placeholder="Title of the item" />
+              </Form.Item>
+
+              {selectedItemType === 'Link' && (
+                <Form.Item
+                  name="url"
+                  label={<span style={{ color: '#374151' }}>URL</span>}
+                  rules={[{ required: true, message: 'Please input the URL!' }, { type: 'url', message: 'Please enter a valid URL!' }]}
+                >
+                  <Input size="large" placeholder="e.g., https://example.com" />
+                </Form.Item>
+              )}
+
+              {selectedItemType === 'Video' && (
+                <>
+                  <Form.Item
+                    name="url"
+                    label={<span style={{ color: '#374151' }}>Video URL</span>}
+                    rules={[{ required: true, message: 'Please input the video URL!' }, { type: 'url', message: 'Please enter a valid URL!' }]}
+                  >
+                    <Input size="large" placeholder="e.g., https://youtube.com/watch?v=abc" />
+                  </Form.Item>
+                  <Form.Item
+                    name="duration"
+                    label={<span style={{ color: '#374151' }}>Duration (seconds)</span>}
+                    rules={[{ type: 'number', message: 'Please enter a valid number!' }]}
+                  >
+                    <Input type="number" size="large" placeholder="e.g., 300" />
+                  </Form.Item>
+                  <Form.Item
+                    name="thumbnail"
+                    label={<span style={{ color: '#374151' }}>Thumbnail URL (Optional)</span>}
+                    rules={[{ type: 'url', message: 'Please enter a valid URL!' }]}
+                  >
+                    <Input size="large" placeholder="e.g., https://example.com/thumbnail.jpg" />
+                  </Form.Item>
+                </>
+              )}
+
+              {selectedItemType === 'Document' && (
+                <Form.Item
+                  name="content"
+                  label={<span style={{ color: '#374151' }}>Document Content (Markdown)</span>}
+                  rules={[{ required: true, message: 'Please input the document content!' }]}
+                >
+                  <Input.TextArea rows={8} size="large" placeholder="Write your document content in Markdown" />
+                </Form.Item>
+              )}
+
+              <Form.Item
+                name="description"
+                label={<span style={{ color: '#374151' }}>Description (Optional)</span>}
+              >
+                <Input.TextArea rows={2} size="large" placeholder="Brief description of the item" />
+              </Form.Item>
+              <Form.Item style={{ marginBottom: '0' }}>
+                <Button type="primary" htmlType="submit" size="large" icon={<PlusOutlined />}>
+                  Add Item
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
+        )}
       </Content>
     </Layout>
   );

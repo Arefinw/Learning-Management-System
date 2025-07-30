@@ -75,6 +75,19 @@ exports.createProject = async (req, res, next) => {
 
     const project = await newProject.save();
 
+    // Create a default root folder for the new project
+    const rootFolder = new Folder({
+      name: 'Root Folder',
+      description: 'Default folder for this project',
+      project: project._id,
+      owner: req.user.id, // Assign owner to the folder as well
+    });
+    await rootFolder.save();
+
+    // Add the root folder to the project's folders array
+    project.folders.push(rootFolder._id);
+    await project.save();
+
     // Add project to workspace's projects array
     if (workspace) {
       await Workspace.findByIdAndUpdate(workspace, { $push: { projects: project._id } });
