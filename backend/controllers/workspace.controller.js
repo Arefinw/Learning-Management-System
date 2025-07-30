@@ -62,7 +62,9 @@ exports.getWorkspace = async (req, res, next) => {
         // PUBLIC: Anyone can access - no further checks needed for authenticated users
       } else if (workspace.visibility === 'private') {
         // PRIVATE: Only explicit members can access
-        const isExplicitMember = workspace.members.some(member => member.user.toString() === req.user.id);
+        console.log("workspace.members", workspace.members)
+        console.log("req.user.id", req.user.id)
+        const isExplicitMember = workspace.members.some(member => member.user._id.toString() === req.user.id);
         if (!isExplicitMember) {
           return next(new ErrorResponse('User not authorized to view this workspace', 401));
         }
@@ -179,6 +181,10 @@ exports.addMember = async (req, res, next) => {
     workspace.members.unshift(newMember);
 
     await workspace.save();
+
+    // Add workspace to user's workspaces array
+    user.workspaces.push(workspace._id);
+    await user.save();
 
     // Populate the user field for the newly added member in the response
     const updatedWorkspace = await Workspace.findById(req.params.id)
