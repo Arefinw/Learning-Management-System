@@ -9,7 +9,7 @@ import React, { useState, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { Form, Input, Button, Card, Typography, Space, Divider } from 'antd';
 import { GoogleOutlined, FacebookOutlined, MailOutlined, LockOutlined } from '@ant-design/icons';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
@@ -21,21 +21,22 @@ const Login = () => {
   // Access login function from AuthContext
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
   // State to manage loading status during login
   const [loading, setLoading] = useState(false);
+
+  const from = location.state?.from?.pathname || "/dashboard";
 
   /**
    * Handles the form submission for user login.
    * @param {object} values - The form values containing email and password.
    */
   const onFinish = async (values) => {
-    setLoading(true); // Set loading to true when login process starts
-    const success = await login(values.email, values.password); // Call the login function from AuthContext
-    console.log('Login successful', success);
-    setLoading(false); // Set loading to false after login process completes
+    setLoading(true);
+    const success = await login(values.email, values.password);
+    setLoading(false);
     if (success) {
-      console.log('Login successful');
-      navigate('/dashboard');
+      navigate(from, { replace: true });
     }
   };
 

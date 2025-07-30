@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const workspaceSchema = new mongoose.Schema({
   name: {
@@ -10,32 +10,32 @@ const workspaceSchema = new mongoose.Schema({
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: "User",
     required: true,
   },
   members: [
     {
       user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: "User",
       },
       role: {
         type: String,
-        enum: ['admin', 'editor', 'viewer'],
-        default: 'viewer',
+        enum: ["admin", "editor", "member"],
+        default: "member",
       },
     },
   ],
   projects: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Project',
+      ref: "Project",
     },
   ],
   visibility: {
     type: String,
-    enum: ['public', 'private', 'workspace'],
-    default: 'private',
+    enum: ["public", "private", "workspace"],
+    default: "private",
   },
   createdAt: {
     type: Date,
@@ -47,4 +47,4 @@ const workspaceSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('Workspace', workspaceSchema);
+module.exports = mongoose.model("Workspace", workspaceSchema);

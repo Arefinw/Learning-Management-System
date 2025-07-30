@@ -2,12 +2,13 @@ import React, { useState, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { Form, Input, Button, Card, Typography, Space, Divider, message } from 'antd';
 import { UserOutlined, MailOutlined, LockOutlined, GoogleOutlined, FacebookOutlined } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
 const Register = () => {
   const { register } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const onFinish = async (values) => {
@@ -16,8 +17,11 @@ const Register = () => {
       return;
     }
     setLoading(true);
-    await register({ name: values.name, email: values.email, password: values.password });
+    const success = await register({ name: values.name, email: values.email, password: values.password });
     setLoading(false);
+    if (success) {
+      navigate("/dashboard");
+    }
   };
 
   return (

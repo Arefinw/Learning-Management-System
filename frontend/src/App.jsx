@@ -24,37 +24,43 @@ import PathwayEditor from './components/pathway/PathwayEditor';
 import AdminPanel from './pages/AdminPanel';
 import PublicView from './pages/PublicView';
 import { AuthProvider } from './context/AuthContext';
+import PrivateRoute from './components/auth/PrivateRoute';
 
 const App = () => {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
           <Navbar />
           <div style={{ flex: 1, padding: '20px' }}>
             <Routes>
+              {/* Public routes */}
               <Route path="/" element={<Home />} />
-              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/workspaces" element={<WorkspaceList />} />
-              <Route path="/workspaces/new" element={<WorkspaceForm />} />
-              <Route path="/workspaces/:id" element={<WorkspaceDetail />} />
-              <Route path="/workspaces/:id/edit" element={<WorkspaceForm isEditMode={true} />} />
-              <Route path="/projects" element={<ProjectList />} />
-              <Route path="/projects/new" element={<ProjectForm />} />
-              <Route path="/projects/:id" element={<ProjectDetail />} />
-              <Route path="/projects/:id/edit" element={<ProjectForm isEditMode={true} />} />
-              <Route path="/pathways/:id" element={<PathwayDetail />} />
-              <Route path="/pathways/:id/edit" element={<PathwayEditor />} />
-              <Route path="/admin" element={<AdminPanel />} />
               <Route path="/public" element={<PublicView />} />
+
+              {/* Protected routes */}
+              <Route element={<PrivateRoute />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/workspaces" element={<WorkspaceList />} />
+                <Route path="/workspaces/new" element={<WorkspaceForm />} />
+                <Route path="/workspaces/:id" element={<WorkspaceDetail />} />
+                <Route path="/workspaces/:id/edit" element={<WorkspaceForm isEditMode={true} />} />
+                <Route path="/projects" element={<ProjectList />} />
+                <Route path="/projects/new" element={<ProjectForm />} />
+                <Route path="/projects/:id" element={<ProjectDetail />} />
+                <Route path="/projects/:id/edit" element={<ProjectForm isEditMode={true} />} />
+                <Route path="/pathways/:id" element={<PathwayDetail />} />
+                <Route path="/pathways/:id/edit" element={<PathwayEditor />} />
+                <Route path="/admin" element={<AdminPanel />} />
+              </Route>
             </Routes>
           </div>
           <Footer />
         </div>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 };
 

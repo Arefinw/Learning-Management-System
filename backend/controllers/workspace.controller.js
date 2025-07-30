@@ -49,10 +49,10 @@ exports.getWorkspace = async (req, res, next) => {
       return next(new ErrorResponse('Workspace not found', 404));
     }
 
-    console.log("workspace", workspace)
+    // console.log("workspace", workspace)
 
-    console.log("workspace's owner", workspace.owner._id.toString())
-    console.log("user's id", req.user.id)
+    // console.log("workspace's owner", workspace.owner._id.toString())
+    // console.log("user's id", req.user.id)
     // Check authorization based on visibility settings
     if (workspace.owner._id.toString() === req.user.id) {
       // OWNER: Always authorized - no further checks needed
